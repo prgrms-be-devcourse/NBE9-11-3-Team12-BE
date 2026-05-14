@@ -81,11 +81,11 @@ class RegistrationCommandServiceTest {
                 user,
                 course,
                 marathon,
-                request.snapZipCode(),
-                request.snapAddress(),
-                request.snapDetail(),
-                request.tSize(),
-                request.agreedTerms()
+                request.snapZipCode,
+                request.snapAddress,
+                request.snapDetail,
+                request.tSize,
+                request.agreedTerms
         );
         LocalDateTime appliedAt = LocalDateTime.of(2026, 4, 15, 10, 0);
         ReflectionTestUtils.setField(savedRegistration, "id", 4L);
@@ -115,13 +115,13 @@ class RegistrationCommandServiceTest {
         assertEquals(true, capturedRegistration.isAgreedTerms());
 
         assertNotNull(result);
-        assertEquals(4L, result.registrationId());
-        assertEquals(2L, result.marathonId());
-        assertEquals("서울 마라톤", result.marathonTitle());
-        assertEquals(3L, result.courseId());
-        assertEquals("10K", result.courseType());
-        assertEquals("COMPLETED", result.status());
-        assertEquals(appliedAt, result.appliedAt());
+        assertEquals(4L, result.registrationId);
+        assertEquals(2L, result.marathonId);
+        assertEquals("서울 마라톤", result.marathonTitle);
+        assertEquals(3L, result.courseId);
+        assertEquals("10K", result.courseType);
+        assertEquals("COMPLETED", result.status);
+        assertEquals(appliedAt, result.appliedAt);
 
         verify(courseRepository, times(1)).increaseCurrentCountIfNotFull(3L);
         verify(eventPublisher, times(1)).publishEvent(any(RegistrationCompletedEvent.class));

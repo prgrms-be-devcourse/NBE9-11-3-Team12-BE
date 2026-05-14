@@ -83,10 +83,10 @@ class RegistrationCommandServiceIntegrationTest {
         CreateRegistrationRes res = registrationService.create(participant.getId(), req);
 
         assertThat(res).isNotNull();
-        assertThat(res.registrationId()).isNotNull();
-        assertThat(res.marathonTitle()).isEqualTo("서울 마라톤");
-        assertThat(res.courseType()).isEqualTo("10K");
-        assertThat(registrationRepository.findById(res.registrationId())).isPresent();
+        assertThat(res.registrationId).isNotNull();
+        assertThat(res.marathonTitle).isEqualTo("서울 마라톤");
+        assertThat(res.courseType).isEqualTo("10K");
+        assertThat(registrationRepository.findById(res.registrationId)).isPresent();
 
         Course savedCourse = courseRepository.findById(course.getId()).orElseThrow();
         assertThat(savedCourse.getCurrentCount()).isEqualTo(1);
@@ -107,8 +107,8 @@ class RegistrationCommandServiceIntegrationTest {
         CreateRegistrationRes res = registrationService.create(participant.getId(), req);
 
         assertThat(res).isNotNull();
-        assertThat(res.registrationId()).isNotNull();
-        assertThat(registrationRepository.findById(res.registrationId())).isPresent();
+        assertThat(res.registrationId).isNotNull();
+        assertThat(registrationRepository.findById(res.registrationId)).isPresent();
 
         Course savedCourse = courseRepository.findById(course.getId()).orElseThrow();
         assertThat(savedCourse.getCurrentCount()).isEqualTo(1);
