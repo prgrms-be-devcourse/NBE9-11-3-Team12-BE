@@ -1,0 +1,98 @@
+server:
+  port: 8080 # 스프링 서버가 뜰 포트
+
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  data:
+    redis:
+      host: localhost
+      port: 16379
+      timeout: 6000 # 6초, Redis 서버와 통신할 때의 응답 대기 시간
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:13306/rungo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: create # 엔티티 변경 시 테이블 구조 자동 업데이트
+    show-sql: true     # 실행되는 SQL 콘솔에 출력
+    properties:
+      hibernate:
+        format_sql: true # SQL 가독성 좋게 정렬
+        default_batch_fetch_size: 1000 # 성능 최적화 설정
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    retry:
+      max-attempts: 3
+      delay: 1000
+      multiplier: 2.0
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - profile
+              - email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+springdoc:
+  default-produces-media-type: application/json; charset=UTF-8
+
+jwt:
+  secret: ${JWT_SECRET}
+
+marathon:
+  min-days:
+    start-to-end: 1
+    end-to-event: 1
+
+app:
+  mail:
+    enabled: true
+  frontend:
+    url: http://localhost:3000
+
+lock:
+  reissue:
+    wait-time: 1
+    lease-time: 2
+
+file:
+  upload-dir: uploads
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    tags:
+      application: rungo
