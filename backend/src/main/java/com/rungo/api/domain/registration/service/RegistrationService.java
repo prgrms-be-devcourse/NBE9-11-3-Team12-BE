@@ -47,7 +47,7 @@ public class RegistrationService {
     public CreateRegistrationRes create(Long userId, CreateRegistrationReq request) {
 
         // 필수 약관 미동의
-        if (!request.agreedTerms()) {
+        if (!request.agreedTerms) {
             throw new CustomException(ErrorCode.REGISTRATION_TERMS_REQUIRED);
         }
 
@@ -58,7 +58,7 @@ public class RegistrationService {
             throw new CustomException(ErrorCode.PROFILE_NOT_COMPLETED);
         }
 
-        Course course = courseRepository.findById(request.courseId())
+        Course course = courseRepository.findById(request.courseId)
                 .orElseThrow(() -> new CustomException(ErrorCode.COURSE_NOT_FOUND));
         Marathon marathon = course.getMarathon();
         LocalDateTime now = LocalDateTime.now();
@@ -80,11 +80,11 @@ public class RegistrationService {
                 user,
                 course,
                 marathon,
-                request.snapZipCode(),
-                request.snapAddress(),
-                request.snapDetail(),
-                request.tSize(),
-                request.agreedTerms()
+                request.snapZipCode,
+                request.snapAddress,
+                request.snapDetail,
+                request.tSize,
+                request.agreedTerms
         );
 
         int updatedRows = courseRepository.increaseCurrentCountIfNotFull(course.getId());
