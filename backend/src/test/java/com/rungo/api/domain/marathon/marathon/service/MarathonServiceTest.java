@@ -201,27 +201,27 @@ class MarathonServiceTest {
 
         assertNotNull(result);
 
-        assertEquals(10L, result.id());
+        assertEquals(10L, result.id);
 
-        assertEquals("서울 마라톤", result.title());
+        assertEquals("서울 마라톤", result.title);
 
-        assertEquals("서울", result.region());
+        assertEquals("서울", result.region);
 
-        assertEquals(LocalDate.of(2026, 10, 3), result.eventDate());
+        assertEquals(LocalDate.of(2026, 10, 3), result.eventDate);
 
-        assertEquals("poster.png", result.posterImageUrl());
+        assertEquals("poster.png", result.posterImageUrl);
 
-        assertEquals(LocalDateTime.of(2026, 8, 1, 9, 0), result.registrationStartAt());
+        assertEquals(LocalDateTime.of(2026, 8, 1, 9, 0), result.registrationStartAt);
 
-        assertEquals(LocalDateTime.of(2026, 8, 31, 18, 0), result.registrationEndAt());
+        assertEquals(LocalDateTime.of(2026, 8, 31, 18, 0), result.registrationEndAt);
 
-        assertEquals(MarathonStatus.OPEN, result.status());
+        assertEquals(MarathonStatus.OPEN, result.status);
 
-        assertEquals(2, result.courses().size());
+        assertEquals(2, result.courses.size());
 
-        assertEquals("5K", result.courses().get(0).courseType());
+        assertEquals("5K", result.courses.get(0).courseType);
 
-        assertEquals("10K", result.courses().get(1).courseType());
+        assertEquals("10K", result.courses.get(1).courseType);
 
     }
 
@@ -619,13 +619,13 @@ class MarathonServiceTest {
         CancelMarathonRes result = marathonService.cancelMarathon(1L, 10L);
 
         assertNotNull(result);
-        assertEquals(10L, result.marathonId());
-        assertEquals("서울 마라톤", result.title());
-        assertEquals(LocalDate.of(2026, 10, 3), result.eventDate());
-        assertEquals(MarathonStatus.CANCELED, result.status());
+        assertEquals(10L, result.marathonId);
+        assertEquals("서울 마라톤", result.title);
+        assertEquals(LocalDate.of(2026, 10, 3), result.eventDate);
+        assertEquals(MarathonStatus.CANCELED, result.status);
 
         assertEquals(MarathonStatus.CANCELED, marathon.getStatus());
-        assertEquals(2, result.courses().size());
+        assertEquals(2, result.courses.size());
     }
 
     @Test
@@ -747,22 +747,22 @@ class MarathonServiceTest {
                 marathonService.updateMarathon(organizerId, 10L, request);
 
         assertNotNull(result);
-        assertEquals(10L, result.id());
-        assertEquals("수정된 서울 마라톤", result.title());
-        assertEquals("부산", result.region());
-        assertEquals(LocalDate.of(2026, 11, 15), result.eventDate());
-        assertEquals("updated-poster.png", result.posterImageUrl());
-        assertEquals(LocalDateTime.of(2026, 9, 1, 9, 0), result.registrationStartAt());
-        assertEquals(LocalDateTime.of(2026, 9, 30, 18, 0), result.registrationEndAt());
+        assertEquals(10L, result.id);
+        assertEquals("수정된 서울 마라톤", result.title);
+        assertEquals("부산", result.region);
+        assertEquals(LocalDate.of(2026, 11, 15), result.eventDate);
+        assertEquals("updated-poster.png", result.posterImageUrl);
+        assertEquals(LocalDateTime.of(2026, 9, 1, 9, 0), result.registrationStartAt);
+        assertEquals(LocalDateTime.of(2026, 9, 30, 18, 0), result.registrationEndAt);
 
-        assertEquals(2, result.courses().size());
-        assertEquals("HALF", result.courses().get(0).courseType());
-        assertEquals(BigDecimal.valueOf(40000), result.courses().get(0).price());
-        assertEquals(150, result.courses().get(0).capacity());
+        assertEquals(2, result.courses.size());
+        assertEquals("HALF", result.courses.get(0).courseType);
+        assertEquals(BigDecimal.valueOf(40000), result.courses.get(0).price);
+        assertEquals(150, result.courses.get(0).capacity);
 
-        assertEquals("FULL", result.courses().get(1).courseType());
-        assertEquals(BigDecimal.valueOf(70000), result.courses().get(1).price());
-        assertEquals(300, result.courses().get(1).capacity());
+        assertEquals("FULL", result.courses.get(1).courseType);
+        assertEquals(BigDecimal.valueOf(70000), result.courses.get(1).price);
+        assertEquals(300, result.courses.get(1).capacity);
     }
 
     @Test
@@ -1064,16 +1064,16 @@ class MarathonServiceTest {
         assertNotNull(result);
         assertEquals(2, result.size());
 
-        assertEquals(10L, result.get(0).id());
-        assertEquals("서울 마라톤", result.get(0).title());
-        assertEquals("서울", result.get(0).region());
-        assertEquals(MarathonStatus.OPEN, result.get(0).status());
-        assertEquals(2, result.get(0).courses().size());
-        assertEquals("5K", result.get(0).courses().get(0).courseType());
-        assertEquals("10K", result.get(0).courses().get(1).courseType());
+        assertEquals(10L, result.get(0).id);
+        assertEquals("서울 마라톤", result.get(0).title);
+        assertEquals("서울", result.get(0).region);
+        assertEquals(MarathonStatus.OPEN, result.get(0).status);
+        assertEquals(2, result.get(0).courses.size());
+        assertEquals("5K", result.get(0).courses.get(0).courseType);
+        assertEquals("10K", result.get(0).courses.get(1).courseType);
 
-        assertEquals(11L, result.get(1).id());
-        assertEquals(MarathonStatus.CANCELING, result.get(1).status());
+        assertEquals(11L, result.get(1).id);
+        assertEquals(MarathonStatus.CANCELING, result.get(1).status);
     }
 
     @Test

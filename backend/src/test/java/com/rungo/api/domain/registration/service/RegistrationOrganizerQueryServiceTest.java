@@ -146,10 +146,10 @@ class RegistrationOrganizerQueryServiceTest {
 
         assertNotNull(result);
         assertEquals(1, result.content().size());
-        assertEquals(0, result.pageRes().page());
-        assertEquals(20, result.pageRes().size());
-        assertEquals(1L, result.pageRes().totalElements());
-        assertEquals(1, result.pageRes().totalPages());
+        assertEquals(0, result.pageRes().page);
+        assertEquals(20, result.pageRes().size);
+        assertEquals(1L, result.pageRes().totalElements);
+        assertEquals(1, result.pageRes().totalPages);
 
         RegistrationParticipantListRes.Item item = result.content().get(0);
         assertEquals(1000L, item.registrationId());

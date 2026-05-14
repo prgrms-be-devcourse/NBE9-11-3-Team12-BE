@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -62,49 +63,49 @@ public class MarathonService {
 
         Users organizer = findOrganizer(id);
 
-        String posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage());
+        String posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage);
 
         // 대회 접수 시작일이 종료일보다 이후이면 예외 처리
-        if (req.registrationStartAt().isAfter(req.registrationEndAt())) {
+        if (req.registrationStartAt.isAfter(req.registrationEndAt)) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         // 대회 개최일이 종료일 보다 이전이면 예외 처리
-        if (req.eventDate().isBefore(req.registrationEndAt().toLocalDate())) {
+        if (req.eventDate.isBefore(req.registrationEndAt.toLocalDate())) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         validateMarathonSchedule(
-                req.registrationStartAt(),
-                req.registrationEndAt(),
-                req.eventDate()
+                req.registrationStartAt,
+                req.registrationEndAt,
+                req.eventDate
         );
 
         //코스 타입 중복이면 예외 처리
         Set<String> courseTypes = new HashSet<>();
-        for (CreateMarathonReq.CreateCourseItemReq courseReq : req.courses()) {
+        for (CreateMarathonReq.CreateCourseItemReq courseReq : req.courses) {
 
 
-            if (!courseTypes.add(normalizeCourseType(courseReq.courseType()))) {
+            if (!courseTypes.add(normalizeCourseType(courseReq.courseType))) {
                 throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
             }
         }
         Marathon marathon = Marathon.create(
                 organizer,
-                req.title(),
-                req.region(),
-                req.detailedAddress(),
-                req.eventDate(),
+                req.title,
+                req.region,
+                req.detailedAddress,
+                req.eventDate,
                 posterImageUrl,
-                req.registrationStartAt(),
-                req.registrationEndAt()
+                req.registrationStartAt,
+                req.registrationEndAt
         );
 
-        for (CreateMarathonReq.CreateCourseItemReq courseReq : req.courses()) {
+        for (CreateMarathonReq.CreateCourseItemReq courseReq : req.courses) {
             Course course = new Course(
-                    normalizeCourseType(courseReq.courseType()),
-                    courseReq.price(),
-                    courseReq.capacity(),
+                    normalizeCourseType(courseReq.courseType),
+                    courseReq.price,
+                    courseReq.capacity,
                     0
             );
 
@@ -211,16 +212,16 @@ public class MarathonService {
             throw new CustomException(ErrorCode.MARATHON_ALREADY_CANCELED);
         }
 
-        LocalDateTime registrationStartAt = req.registrationStartAt() != null
-                ? req.registrationStartAt()
+        LocalDateTime registrationStartAt = req.registrationStartAt != null
+                ? req.registrationStartAt
                 : marathon.getRegistrationStartAt();
 
-        LocalDateTime registrationEndAt = req.registrationEndAt() != null
-                ? req.registrationEndAt()
+        LocalDateTime registrationEndAt = req.registrationEndAt != null
+                ? req.registrationEndAt
                 : marathon.getRegistrationEndAt();
 
-        LocalDate eventDate = req.eventDate() != null
-                ? req.eventDate()
+        LocalDate eventDate = req.eventDate != null
+                ? req.eventDate
                 : marathon.getEventDate();
 
         validateMarathonSchedule(
@@ -229,7 +230,7 @@ public class MarathonService {
                 eventDate
         );
 
-        String posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage());
+        String posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage);
 
         //기존에 있는 Course를 Map으로 저장
         Map<Long, Course> courseMap = toCourseMap(marathon);
@@ -240,23 +241,23 @@ public class MarathonService {
 
 
         marathon.updateMarathonInfo(
-                req.title(),
-                req.region(),
-                req.detailedAddress(),
-                req.eventDate(),
+                req.title,
+                req.region,
+                req.detailedAddress,
+                req.eventDate,
                 posterImageUrl,
-                req.registrationStartAt(),
-                req.registrationEndAt()
+                req.registrationStartAt,
+                req.registrationEndAt
         );
 
         //courses 가 NUll 이 아니라면 코스 수정 로직 수행, NULL 이면 코스 수정 없이 마라톤 정보만 업데이트
-        if (req.courses() != null) {
+        if (req.courses != null) {
 
 
 
 
-            for (UpdateMarathonReq.UpdateCourseItemReq courseReq : req.courses()) {
-                Course course = courseMap.get(courseReq.id()); //courseReq.id()는 DTO에서 NOT Null 제약을 걸었기에 따로 Null 처리하지 않았습니다.
+            for (UpdateMarathonReq.UpdateCourseItemReq courseReq : req.courses) {
+                Course course = courseMap.get(courseReq.id); //courseReq.id()는 DTO에서 NOT Null 제약을 걸었기에 따로 Null 처리하지 않았습니다.
 
                 //수정 하고자 하는 Course 존재 안할시 예외처리
                 if (course == null) {
@@ -264,9 +265,9 @@ public class MarathonService {
                 }
 
                 course.updateCourseInfo(
-                        courseReq.courseType(),
-                        courseReq.price(),
-                        courseReq.capacity()
+                        courseReq.courseType,
+                        courseReq.price,
+                        courseReq.capacity
                 );
             }
         }
@@ -303,16 +304,16 @@ public class MarathonService {
     }
     // 들어온 날짜를 토대로 유효성 검증하는 함수, null이 들어온 경우 기존 마라톤 정보를 토대로 검증
     private void validatePatchRequest(UpdateMarathonReq req, Marathon marathon) {
-        LocalDateTime registrationStartAt = req.registrationStartAt() != null
-                ? req.registrationStartAt()
+        LocalDateTime registrationStartAt = req.registrationStartAt != null
+                ? req.registrationStartAt
                 : marathon.getRegistrationStartAt();
 
-        LocalDateTime registrationEndAt = req.registrationEndAt() != null
-                ? req.registrationEndAt()
+        LocalDateTime registrationEndAt = req.registrationEndAt != null
+                ? req.registrationEndAt
                 : marathon.getRegistrationEndAt();
 
-        LocalDate eventDate = req.eventDate() != null
-                ? req.eventDate()
+        LocalDate eventDate = req.eventDate != null
+                ? req.eventDate
                 : marathon.getEventDate();
 
         if (registrationStartAt.isAfter(registrationEndAt)) {
@@ -330,7 +331,7 @@ public class MarathonService {
                                              Map<Long,Course> courseMap) {
 
         // 수정 요청에 코스가 없으면 검증 X
-        if (req.courses() == null || req.courses().isEmpty()) {
+        if (req.courses == null || req.courses.isEmpty()) {
             return;
         }
 
@@ -343,9 +344,9 @@ public class MarathonService {
                 ));
 
         //수정 사항 반영.
-        for (UpdateMarathonReq.UpdateCourseItemReq courseReq : req.courses()) {
+        for (UpdateMarathonReq.UpdateCourseItemReq courseReq : req.courses) {
 
-            Course target = courseMap.get(courseReq.id());
+            Course target = courseMap.get(courseReq.id);
 
             //만약 수정하려는 Course가 DB에 존재하지 않는다면 예외 처리
             if (target == null) {
@@ -353,12 +354,12 @@ public class MarathonService {
             }
 
             //null들어오면 수정 X
-            if (courseReq.courseType() == null) continue;
+            if (courseReq.courseType == null) continue;
 
             //중복을 허용하며, Map에 일단 저장
             finalCourseTypes.put(
-                    courseReq.id(),
-                    normalizeCourseType(courseReq.courseType())
+                    courseReq.id,
+                    normalizeCourseType(courseReq.courseType)
             );
         }
 
@@ -374,16 +375,17 @@ public class MarathonService {
 
     //코스 아이디 중복 여부 검사하는 함수.
     private void validateDuplicateCourseIds(UpdateMarathonReq req) {
-        if (req.courses() == null || req.courses().isEmpty()) {
+        if (req.courses == null || req.courses.isEmpty()) {
             return;
         }
 
-        long distinctCount = req.courses().stream()
-                .map(UpdateMarathonReq.UpdateCourseItemReq::id)
+        long distinctCount = req.courses.stream()
+                .map(course -> course.id)
+                .filter(Objects::nonNull)
                 .distinct()
                 .count();
 
-        if (distinctCount != req.courses().size()) {
+        if (distinctCount != req.courses.size()) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
     }
