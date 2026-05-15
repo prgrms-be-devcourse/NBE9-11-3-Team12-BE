@@ -50,23 +50,23 @@ public class AuthService {
     @Transactional
     public SignUpRes signup(SignUpReq req) {
 
-        if (userRepository.findByEmail(req.email()).isPresent()) {
+        if (userRepository.findByEmail(req.email).isPresent()) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         Users user = Users.builder()
-                          .email(req.email())
-                          .name(req.name())
-                          .phoneNumber(req.phoneNumber())
-                          .gender(req.gender())
-                          .birth(req.birth())
+                          .email(req.email)
+                          .name(req.name)
+                          .phoneNumber(req.phoneNumber)
+                          .gender(req.gender)
+                          .birth(req.birth)
                           .role(Role.PARTICIPANT) // PARTICIPANT 고정
                           .build();
 
         Users savedUser = userRepository.save(user);
 
         userAuthRepository.save(
-                UserAuth.createLocalAuth(savedUser, passwordEncoder.encode(req.password()))
+                UserAuth.createLocalAuth(savedUser, passwordEncoder.encode(req.password))
         );
 
         return new SignUpRes(

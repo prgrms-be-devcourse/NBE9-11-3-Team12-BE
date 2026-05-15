@@ -80,11 +80,11 @@ class AuthServiceTest {
 
         Users savedUser = Users.builder()
                 .id(1L)
-                .email(req.email())
-                .name(req.name())
-                .phoneNumber(req.phoneNumber())
-                .gender(req.gender())
-                .birth(req.birth())
+                .email(req.email)
+                .name(req.name)
+                .phoneNumber(req.phoneNumber)
+                .gender(req.gender)
+                .birth(req.birth)
                 .role(Role.PARTICIPANT)
                 .build();
 
