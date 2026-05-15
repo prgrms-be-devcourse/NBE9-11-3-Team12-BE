@@ -38,8 +38,8 @@ class UsersService(
         user.updateProfile(
             req.name ?: user.name,
             req.phoneNumber ?: user.phoneNumber,
-            user.gender,
-            user.birth
+            req.gender ?: user.gender,
+            req.birth ?: user.birth,
         )
 
         return UpdateMyProfileRes(
