@@ -40,17 +40,15 @@ data class CourseItemRes(
     companion object {
 
         @JvmStatic
-        fun from(course: Course): CourseItemRes {
-
-            return CourseItemRes(
-                id = course.id,
-                courseType = course.courseType,
-                price = course.price,
-                capacity = course.capacity,
-                currentCount = course.currentCount,
-                remainingCount = course.remainingCount,
-                status = course.status
-            )
-        }
+        fun from(course: Course) = CourseItemRes(
+            id = course.id,
+            courseType = course.courseType,
+            price = course.price,
+            capacity = course.capacity,
+            currentCount = course.currentCount,
+            remainingCount = course.remainingCount,
+            status = course.status
+        )
     }
+
 }

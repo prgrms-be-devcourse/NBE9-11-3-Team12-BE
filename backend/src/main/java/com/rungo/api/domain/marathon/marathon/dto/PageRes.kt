@@ -26,14 +26,12 @@ data class PageRes(
     companion object {
 
         @JvmStatic
-        fun from(page: Page<*>): PageRes {
-
-            return PageRes(
-                page = page.number,
-                size = page.size,
-                totalElements = page.totalElements,
-                totalPages = page.totalPages
-            )
-        }
+        fun from(page: Page<*>) = PageRes(
+            page = page.number,
+            size = page.size,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages
+        )
     }
+
 }

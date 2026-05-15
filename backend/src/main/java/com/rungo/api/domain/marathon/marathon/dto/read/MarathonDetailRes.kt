@@ -61,22 +61,21 @@ data class MarathonDetailRes(
 ) {
     companion object {
         @JvmStatic
-        fun from(marathon: Marathon): MarathonDetailRes {
-            return MarathonDetailRes(
-                id = marathon.id,
-                title = marathon.title,
-                region = marathon.region,
-                detailedAddress = marathon.detailedAddress,
-                eventDate = marathon.eventDate,
-                posterImageUrl = marathon.posterImageUrl,
-                registrationStartAt = marathon.registrationStartAt,
-                registrationEndAt = marathon.registrationEndAt,
-                status = marathon.status,
-                recruitmentStatus = marathon.recruitmentStatus,
-                courses = marathon.courses
-                    .map { CourseItemRes.from(it) },
-                createdAt = marathon.createdAt
-            )
-        }
+        fun from(marathon: Marathon) = MarathonDetailRes(
+            id = marathon.id,
+            title = marathon.title,
+            region = marathon.region,
+            detailedAddress = marathon.detailedAddress,
+            eventDate = marathon.eventDate,
+            posterImageUrl = marathon.posterImageUrl,
+            registrationStartAt = marathon.registrationStartAt,
+            registrationEndAt = marathon.registrationEndAt,
+            status = marathon.status,
+            recruitmentStatus = marathon.recruitmentStatus,
+            courses = marathon.courses
+                .map { CourseItemRes.from(it) },
+            createdAt = marathon.createdAt
+        )
+
     }
 }

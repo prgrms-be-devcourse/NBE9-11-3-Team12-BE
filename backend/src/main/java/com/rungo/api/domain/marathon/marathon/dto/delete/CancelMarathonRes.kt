@@ -30,15 +30,14 @@ data class CancelMarathonRes(
 ) {
     companion object {
         @JvmStatic
-        fun from(marathon: Marathon): CancelMarathonRes {
-            return CancelMarathonRes(
-                marathonId = marathon.id,
-                title = marathon.title,
-                eventDate = marathon.eventDate,
-                status = marathon.status,
-                courses = marathon.courses
-                    .map { CancelCourseItemRes.from(it) }
-            )
-        }
+        fun from(marathon: Marathon) = CancelMarathonRes(
+            marathonId = marathon.id,
+            title = marathon.title,
+            eventDate = marathon.eventDate,
+            status = marathon.status,
+            courses = marathon.courses
+                .map { CancelCourseItemRes.from(it) }
+        )
+
     }
 }

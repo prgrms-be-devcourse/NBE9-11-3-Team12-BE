@@ -76,28 +76,27 @@ data class ReadMyMarathonRes(
 
     companion object {
         @JvmStatic
-        fun from(marathon: Marathon): ReadMyMarathonRes {
-            return ReadMyMarathonRes(
-                id = marathon.id,
-                title = marathon.title,
-                region = marathon.region,
-                detailedAddress = marathon.detailedAddress,
-                eventDate = marathon.eventDate,
-                posterImageUrl = marathon.posterImageUrl,
-                registrationStartAt = marathon.registrationStartAt,
-                registrationEndAt = marathon.registrationEndAt,
-                status = marathon.status,
-                courses = marathon.courses
-                    .map { course ->
-                        CourseSummary(
-                            courseId = course.id,
-                            courseType = course.courseType,
-                            price = course.price,
-                            capacity = course.capacity,
-                            currentCount = course.currentCount
-                        )
-                    }
-            )
-        }
+        fun from(marathon: Marathon) = ReadMyMarathonRes(
+            id = marathon.id,
+            title = marathon.title,
+            region = marathon.region,
+            detailedAddress = marathon.detailedAddress,
+            eventDate = marathon.eventDate,
+            posterImageUrl = marathon.posterImageUrl,
+            registrationStartAt = marathon.registrationStartAt,
+            registrationEndAt = marathon.registrationEndAt,
+            status = marathon.status,
+            courses = marathon.courses
+                .map { course ->
+                    CourseSummary(
+                        courseId = course.id,
+                        courseType = course.courseType,
+                        price = course.price,
+                        capacity = course.capacity,
+                        currentCount = course.currentCount
+                    )
+                }
+        )
+
     }
 }
