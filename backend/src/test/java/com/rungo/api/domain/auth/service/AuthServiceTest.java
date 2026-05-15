@@ -136,11 +136,11 @@ class AuthServiceTest {
         LoginResult result = authService.login(req);
 
         assertNotNull(result);
-        assertNotNull(result.accessToken());
-        assertNotNull(result.refreshToken());
-        assertEquals(1L, result.loginRes().userId());
-        assertEquals("test@test.com", result.loginRes().email());
-        assertEquals("홍길동", result.loginRes().name());
+        assertNotNull(result.accessToken);
+        assertNotNull(result.refreshToken);
+        assertEquals(1L, result.loginRes.userId());
+        assertEquals("test@test.com", result.loginRes.email());
+        assertEquals("홍길동", result.loginRes.name());
 
         // Redis에 refreshToken 저장 호출 검증
         then(refreshTokenService).should().saveRefreshToken(eq(1L), anyString());
