@@ -5,6 +5,8 @@ import com.rungo.api.domain.users.dto.MyProfileRes
 import com.rungo.api.domain.users.dto.UpdateMyProfileReq
 import com.rungo.api.domain.users.dto.UpdateMyProfileRes
 import com.rungo.api.domain.users.service.UsersService
+import com.rungo.api.global.exception.CustomException
+import com.rungo.api.global.exception.ErrorCode
 import com.rungo.api.global.response.ApiResponse
 import com.rungo.api.global.security.SecurityUser
 import io.swagger.v3.oas.annotations.Operation
@@ -48,7 +50,10 @@ class UsersController(
         @AuthenticationPrincipal user: SecurityUser,
         @Valid @RequestBody req: UpdateMyProfileReq
     ): ResponseEntity<ApiResponse<UpdateMyProfileRes>> {
-        return ResponseEntity.ok(ApiResponse.ok(userService.updateMyProfile(user.id, req)))
+        if (req.name == null && req.phoneNumber == null && req.gender == null && req.birth == null) {
+            throw CustomException(ErrorCode.INVALID_INPUT_VALUE)
+        }
+        return ResponseEntity.ok(ApiResponse.ok(userService.updateMyProfile(user.getId(), req)))
     }
 
     @PatchMapping("/me/complete")
