@@ -35,11 +35,9 @@ data class SignUpReq(
     val phoneNumber: String,
 
     @field:Schema(description = "성별", example = "MALE")
-    @field:NotNull(message = "성별은 필수입니다.")
     val gender: Gender,
 
     @field:Schema(description = "생년월일", example = "2000-01-01")
-    @field:NotNull(message = "생년월일은 필수입니다.")
     @field:Past(message = "생년월일은 과거 날짜여야 합니다.")
     val birth: LocalDate
 )
