@@ -129,7 +129,7 @@ class AuthServiceTest {
                 .build();
         UserAuth userAuth = UserAuth.createLocalAuth(user, "encoded-pass");
 
-        given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
+        given(userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL))
                 .willReturn(Optional.of(userAuth));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
 
@@ -151,7 +151,7 @@ class AuthServiceTest {
     void login_fail_user_not_found() {
         LoginReq req = new LoginReq("notfound@test.com", "pass123!");
 
-        given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
+        given(userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL))
                 .willReturn(Optional.empty());
 
         CustomException exception = assertThrows(CustomException.class, () -> authService.login(req));
@@ -168,7 +168,7 @@ class AuthServiceTest {
                 .build();
         UserAuth userAuth = UserAuth.createLocalAuth(user, "encoded-pass");
 
-        given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
+        given(userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL))
                 .willReturn(Optional.of(userAuth));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
 

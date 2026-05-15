@@ -84,11 +84,11 @@ public class AuthService {
     @Transactional
     public LoginResult login(LoginReq req) {
 
-        UserAuth userAuth = userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL)
+        UserAuth userAuth = userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL)
                                               .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (userAuth.getPassword() == null ||
-                !passwordEncoder.matches(req.password(), userAuth.getPassword())) {
+                !passwordEncoder.matches(req.password, userAuth.getPassword())) {
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
