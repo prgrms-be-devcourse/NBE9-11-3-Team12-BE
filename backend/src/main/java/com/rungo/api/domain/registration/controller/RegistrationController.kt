@@ -60,7 +60,7 @@ class RegistrationController(
     fun cancel(
         @AuthenticationPrincipal user: SecurityUser,
         @PathVariable registrationId: Long,
-    ): ResponseEntity<ApiResponse<Void>> {
+    ): ResponseEntity<ApiResponse<Void?>> {
         registrationService.cancel(user.id, registrationId)
 
         return ResponseEntity.ok(ApiResponse.okMessage("접수가 취소되었습니다."))
