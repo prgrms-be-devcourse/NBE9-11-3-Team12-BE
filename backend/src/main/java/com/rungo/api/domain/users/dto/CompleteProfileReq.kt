@@ -3,7 +3,6 @@ package com.rungo.api.domain.users.dto
 import com.rungo.api.domain.users.enumtype.Gender
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Past
 import jakarta.validation.constraints.Pattern
 import java.time.LocalDate
@@ -23,11 +22,9 @@ data class CompleteProfileReq(
     val phoneNumber: String,
 
     @field:Schema(description = "성별", example = "MALE")
-    @field:NotNull
     val gender: Gender,
 
     @field:Schema(description = "생년월일", example = "1990-01-01")
-    @field:NotNull
     @field:Past(message = "생년월일은 과거 날짜여야 합니다.")
     val birth: LocalDate
 )
