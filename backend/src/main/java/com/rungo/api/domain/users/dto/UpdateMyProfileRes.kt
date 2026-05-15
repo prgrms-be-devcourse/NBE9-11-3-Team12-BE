@@ -15,11 +15,9 @@ data class UpdateMyProfileRes(
     val email: String,
 
     @field:Schema(description = "사용자 이름", example = "홍길동")
-    @JvmField
     val name: String,
 
     @field:Schema(description = "전화번호", example = "010-1234-5678")
-    @JvmField
     val phoneNumber: String,
 
     @field:Schema(description = "성별", example="MALE")
