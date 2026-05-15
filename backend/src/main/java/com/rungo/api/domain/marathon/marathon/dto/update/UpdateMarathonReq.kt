@@ -3,7 +3,6 @@ package com.rungo.api.domain.marathon.marathon.dto.update
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotNull
 import org.springframework.web.multipart.MultipartFile
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -50,9 +49,8 @@ data class UpdateMarathonReq(
     data class UpdateCourseItemReq(
 
         @field:Schema(description = "코스 ID", example = "1")
-        @field:NotNull(message = "코스 아이디는 필수입니다.")
         @JvmField
-        val id: Long?,
+        val id: Long,
 
         @field:Schema(description = "코스 타입", example = "10KM")
         @JvmField
