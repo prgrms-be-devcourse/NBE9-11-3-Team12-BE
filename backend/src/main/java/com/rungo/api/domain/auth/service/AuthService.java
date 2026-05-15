@@ -50,23 +50,23 @@ public class AuthService {
     @Transactional
     public SignUpRes signup(SignUpReq req) {
 
-        if (userRepository.findByEmail(req.email).isPresent()) {
+        if (userRepository.findByEmail(req.email()).isPresent()) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         Users user = Users.builder()
-                          .email(req.email)
-                          .name(req.name)
-                          .phoneNumber(req.phoneNumber)
-                          .gender(req.gender)
-                          .birth(req.birth)
+                          .email(req.email())
+                          .name(req.name())
+                          .phoneNumber(req.phoneNumber())
+                          .gender(req.gender())
+                          .birth(req.birth())
                           .role(Role.PARTICIPANT) // PARTICIPANT 고정
                           .build();
 
         Users savedUser = userRepository.save(user);
 
         userAuthRepository.save(
-                UserAuth.createLocalAuth(savedUser, passwordEncoder.encode(req.password))
+                UserAuth.createLocalAuth(savedUser, passwordEncoder.encode(req.password()))
         );
 
         return new SignUpRes(
@@ -84,11 +84,11 @@ public class AuthService {
     @Transactional
     public LoginResult login(LoginReq req) {
 
-        UserAuth userAuth = userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL)
+        UserAuth userAuth = userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL)
                                               .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (userAuth.getPassword() == null ||
-                !passwordEncoder.matches(req.password, userAuth.getPassword())) {
+                !passwordEncoder.matches(req.password(), userAuth.getPassword())) {
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 

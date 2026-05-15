@@ -57,10 +57,10 @@ public class AuthController {
     ) {
         LoginResult result = authService.login(req);
 
-        CookieUtil.addCookie(response, "accessToken", result.accessToken, ACCESS_TOKEN_EXPIRE);
-        CookieUtil.addCookie(response, "refreshToken", result.refreshToken, REFRESH_TOKEN_EXPIRE);
+        CookieUtil.addCookie(response, "accessToken", result.accessToken(), ACCESS_TOKEN_EXPIRE);
+        CookieUtil.addCookie(response, "refreshToken", result.refreshToken(), REFRESH_TOKEN_EXPIRE);
 
-        return ResponseEntity.ok(ApiResponse.ok(result.loginRes));
+        return ResponseEntity.ok(ApiResponse.ok(result.loginRes()));
     }
 
     @PostMapping("/logout")
@@ -90,8 +90,8 @@ public class AuthController {
     ) {
         TokenRes tokenRes = authService.tokenReissue(refreshToken);
 
-        CookieUtil.addCookie(response, "accessToken", tokenRes.accessToken, ACCESS_TOKEN_EXPIRE);
-        CookieUtil.addCookie(response, "refreshToken", tokenRes.refreshToken, REFRESH_TOKEN_EXPIRE);
+        CookieUtil.addCookie(response, "accessToken", tokenRes.accessToken(), ACCESS_TOKEN_EXPIRE);
+        CookieUtil.addCookie(response, "refreshToken", tokenRes.refreshToken(), REFRESH_TOKEN_EXPIRE);
 
         return ResponseEntity.ok(ApiResponse.okMessage("토큰이 재발급되었습니다."));
     }

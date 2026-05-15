@@ -80,11 +80,11 @@ class AuthServiceTest {
 
         Users savedUser = Users.builder()
                 .id(1L)
-                .email(req.email)
-                .name(req.name)
-                .phoneNumber(req.phoneNumber)
-                .gender(req.gender)
-                .birth(req.birth)
+                .email(req.email())
+                .name(req.name())
+                .phoneNumber(req.phoneNumber())
+                .gender(req.gender())
+                .birth(req.birth())
                 .role(Role.PARTICIPANT)
                 .build();
 
@@ -95,10 +95,10 @@ class AuthServiceTest {
         SignUpRes res = authService.signup(req);
 
         assertNotNull(res);
-        assertEquals(1L, res.id);
-        assertEquals("test@test.com", res.email);
-        assertEquals("홍길동", res.name);
-        assertEquals(Role.PARTICIPANT, res.role);
+        assertEquals(1L, res.id());
+        assertEquals("test@test.com", res.email());
+        assertEquals("홍길동", res.name());
+        assertEquals(Role.PARTICIPANT, res.role());
     }
 
     @Test
@@ -129,18 +129,18 @@ class AuthServiceTest {
                 .build();
         UserAuth userAuth = UserAuth.createLocalAuth(user, "encoded-pass");
 
-        given(userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL))
+        given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
                 .willReturn(Optional.of(userAuth));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
 
         LoginResult result = authService.login(req);
 
         assertNotNull(result);
-        assertNotNull(result.accessToken);
-        assertNotNull(result.refreshToken);
-        assertEquals(1L, result.loginRes.userId);
-        assertEquals("test@test.com", result.loginRes.email);
-        assertEquals("홍길동", result.loginRes.name);
+        assertNotNull(result.accessToken());
+        assertNotNull(result.refreshToken());
+        assertEquals(1L, result.loginRes().userId());
+        assertEquals("test@test.com", result.loginRes().email());
+        assertEquals("홍길동", result.loginRes().name());
 
         // Redis에 refreshToken 저장 호출 검증
         then(refreshTokenService).should().saveRefreshToken(eq(1L), anyString());
@@ -151,7 +151,7 @@ class AuthServiceTest {
     void login_fail_user_not_found() {
         LoginReq req = new LoginReq("notfound@test.com", "pass123!");
 
-        given(userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL))
+        given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
                 .willReturn(Optional.empty());
 
         CustomException exception = assertThrows(CustomException.class, () -> authService.login(req));
@@ -168,7 +168,7 @@ class AuthServiceTest {
                 .build();
         UserAuth userAuth = UserAuth.createLocalAuth(user, "encoded-pass");
 
-        given(userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL))
+        given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
                 .willReturn(Optional.of(userAuth));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
 
@@ -227,8 +227,8 @@ class AuthServiceTest {
 
         TokenRes result = authService.tokenReissue(refreshToken);
 
-        assertNotNull(result.accessToken);
-        assertNotNull(result.refreshToken);
+        assertNotNull(result.accessToken());
+        assertNotNull(result.refreshToken());
         then(authTransactionService).should().reissueToken(1L, refreshToken);
     }
 
