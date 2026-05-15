@@ -2,7 +2,9 @@ package com.rungo.api.domain.users.dto
 
 import com.rungo.api.domain.users.enumtype.Gender
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.constraints.*
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Past
+import jakarta.validation.constraints.Pattern
 import java.time.LocalDate
 
 @Schema(description = "내 정보 수정 요청 DTO")
