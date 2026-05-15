@@ -95,10 +95,10 @@ class AuthServiceTest {
         SignUpRes res = authService.signup(req);
 
         assertNotNull(res);
-        assertEquals(1L, res.id());
-        assertEquals("test@test.com", res.email());
-        assertEquals("홍길동", res.name());
-        assertEquals(Role.PARTICIPANT, res.role());
+        assertEquals(1L, res.id);
+        assertEquals("test@test.com", res.email);
+        assertEquals("홍길동", res.name);
+        assertEquals(Role.PARTICIPANT, res.role);
     }
 
     @Test

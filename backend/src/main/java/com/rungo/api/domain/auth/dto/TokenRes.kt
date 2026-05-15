@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JvmRecord
 @Schema(description = "토큰 재발급 응답 DTO")
 data class TokenRes(
-        @field:Schema(description = "Access Token") val accessToken: String,
-        @field:Schema(description = "Refresh Token") val refreshToken: String
+        @field:Schema(description = "Access Token")
+        val accessToken: String,
+
+        @field:Schema(description = "Refresh Token")
+        val refreshToken: String
 )
