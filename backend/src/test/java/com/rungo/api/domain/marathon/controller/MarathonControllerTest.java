@@ -18,25 +18,25 @@ import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
 import com.rungo.api.domain.marathon.marathon.enumtype.RecruitmentStatus;
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.marathon.marathon.service.MarathonService;
+import com.rungo.api.domain.users.enumtype.Role;
 import com.rungo.api.global.exception.CustomException;
 import com.rungo.api.global.exception.ErrorCode;
 import com.rungo.api.global.security.SecurityUser;
-import com.rungo.api.domain.users.enumtype.Role;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterEach;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -49,13 +49,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(MarathonController.class)
@@ -167,17 +165,17 @@ class MarathonControllerTest {
         verify(marathonService).createMarathon(eq(1L), requestCaptor.capture());
 
         CreateMarathonReq capturedRequest = requestCaptor.getValue();
-        assertEquals("서울 마라톤", capturedRequest.title());
-        assertEquals("서울", capturedRequest.region());
-        assertEquals("성동구", capturedRequest.detailedAddress());
-        assertEquals(LocalDate.of(2026, 10, 3), capturedRequest.eventDate());
-        assertEquals("poster.png", capturedRequest.posterImage().getOriginalFilename());
-        assertEquals(LocalDateTime.of(2026, 8, 1, 9, 0), capturedRequest.registrationStartAt());
-        assertEquals(LocalDateTime.of(2026, 8, 10, 18, 0), capturedRequest.registrationEndAt());
-        assertEquals(1, capturedRequest.courses().size());
-        assertEquals("10K", capturedRequest.courses().get(0).courseType());
-        assertEquals(BigDecimal.valueOf(30000), capturedRequest.courses().get(0).price());
-        assertEquals(100, capturedRequest.courses().get(0).capacity());
+        assertEquals("서울 마라톤", capturedRequest.title);
+        assertEquals("서울", capturedRequest.region);
+        assertEquals("성동구", capturedRequest.detailedAddress);
+        assertEquals(LocalDate.of(2026, 10, 3), capturedRequest.eventDate);
+        assertEquals("poster.png", capturedRequest.posterImage.getOriginalFilename());
+        assertEquals(LocalDateTime.of(2026, 8, 1, 9, 0), capturedRequest.registrationStartAt);
+        assertEquals(LocalDateTime.of(2026, 8, 10, 18, 0), capturedRequest.registrationEndAt);
+        assertEquals(1, capturedRequest.courses.size());
+        assertEquals("10K", capturedRequest.courses.get(0).courseType);
+        assertEquals(BigDecimal.valueOf(30000), capturedRequest.courses.get(0).price);
+        assertEquals(100, capturedRequest.courses.get(0).capacity);
     }
 
     @Test
@@ -738,22 +736,22 @@ class MarathonControllerTest {
         verify(marathonService).updateMarathon(eq(1L), eq(10L), requestCaptor.capture());
 
         UpdateMarathonReq capturedRequest = requestCaptor.getValue();
-        assertEquals("수정된 서울 마라톤", capturedRequest.title());
-        assertEquals("부산", capturedRequest.region());
-        assertEquals("중구", capturedRequest.detailedAddress());
-        assertEquals(LocalDate.of(2026, 11, 15), capturedRequest.eventDate());
-        assertEquals("updated-poster.png", capturedRequest.posterImage().getOriginalFilename());
-        assertEquals(LocalDateTime.of(2026, 9, 1, 9, 0), capturedRequest.registrationStartAt());
-        assertEquals(LocalDateTime.of(2026, 9, 30, 18, 0), capturedRequest.registrationEndAt());
-        assertEquals(2, capturedRequest.courses().size());
-        assertEquals(101L, capturedRequest.courses().get(0).id());
-        assertEquals("5K", capturedRequest.courses().get(0).courseType());
-        assertEquals(BigDecimal.valueOf(35000), capturedRequest.courses().get(0).price());
-        assertEquals(120, capturedRequest.courses().get(0).capacity());
-        assertEquals(102L, capturedRequest.courses().get(1).id());
-        assertEquals("10K", capturedRequest.courses().get(1).courseType());
-        assertEquals(BigDecimal.valueOf(55000), capturedRequest.courses().get(1).price());
-        assertEquals(220, capturedRequest.courses().get(1).capacity());
+        assertEquals("수정된 서울 마라톤", capturedRequest.title);
+        assertEquals("부산", capturedRequest.region);
+        assertEquals("중구", capturedRequest.detailedAddress);
+        assertEquals(LocalDate.of(2026, 11, 15), capturedRequest.eventDate);
+        assertEquals("updated-poster.png", capturedRequest.posterImage.getOriginalFilename());
+        assertEquals(LocalDateTime.of(2026, 9, 1, 9, 0), capturedRequest.registrationStartAt);
+        assertEquals(LocalDateTime.of(2026, 9, 30, 18, 0), capturedRequest.registrationEndAt);
+        assertEquals(2, capturedRequest.courses.size());
+        assertEquals(101L, capturedRequest.courses.get(0).id);
+        assertEquals("5K", capturedRequest.courses.get(0).courseType);
+        assertEquals(BigDecimal.valueOf(35000), capturedRequest.courses.get(0).price);
+        assertEquals(120, capturedRequest.courses.get(0).capacity);
+        assertEquals(102L, capturedRequest.courses.get(1).id);
+        assertEquals("10K", capturedRequest.courses.get(1).courseType);
+        assertEquals(BigDecimal.valueOf(55000), capturedRequest.courses.get(1).price);
+        assertEquals(220, capturedRequest.courses.get(1).capacity);
 
     }
 

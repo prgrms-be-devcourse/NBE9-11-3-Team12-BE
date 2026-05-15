@@ -97,10 +97,10 @@ class RegistrationReadServiceTest {
 
         assertNotNull(result);
         assertEquals(1, result.content().size());
-        assertEquals(0, result.pageRes().page());
-        assertEquals(20, result.pageRes().size());
-        assertEquals(1L, result.pageRes().totalElements());
-        assertEquals(1, result.pageRes().totalPages());
+        assertEquals(0, result.pageRes().page);
+        assertEquals(20, result.pageRes().size);
+        assertEquals(1L, result.pageRes().totalElements);
+        assertEquals(1, result.pageRes().totalPages);
 
         MyRegistrationRes.Item item = result.content().get(0);
         assertEquals(30L, item.registrationId());
@@ -175,10 +175,10 @@ class RegistrationReadServiceTest {
 
         assertNotNull(result);
         assertEquals(1, result.content().size());
-        assertEquals(1, result.pageRes().page());
-        assertEquals(10, result.pageRes().size());
-        assertEquals(11L, result.pageRes().totalElements());
-        assertEquals(2, result.pageRes().totalPages());
+        assertEquals(1, result.pageRes().page);
+        assertEquals(10, result.pageRes().size);
+        assertEquals(11L, result.pageRes().totalElements);
+        assertEquals(2, result.pageRes().totalPages);
 
         MyRegistrationRes.Item item = result.content().get(0);
         assertEquals(400L, item.registrationId());
@@ -215,10 +215,10 @@ class RegistrationReadServiceTest {
 
         assertNotNull(result);
         assertEquals(0, result.content().size());
-        assertEquals(0, result.pageRes().page());
-        assertEquals(20, result.pageRes().size());
-        assertEquals(0L, result.pageRes().totalElements());
-        assertEquals(0, result.pageRes().totalPages());
+        assertEquals(0, result.pageRes().page);
+        assertEquals(20, result.pageRes().size);
+        assertEquals(0L, result.pageRes().totalElements);
+        assertEquals(0, result.pageRes().totalPages);
     }
 
     private Users createUser(Long id, String name, String phoneNumber) {
