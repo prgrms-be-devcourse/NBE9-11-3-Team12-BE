@@ -10,19 +10,19 @@ data class CancelMarathonRes(
 
     @field:Schema(description = "마라톤 ID", example = "1")
     @JvmField
-    val marathonId: Long?,
+    val marathonId: Long,
 
     @field:Schema(description = "대회명", example = "2026 서울 마라톤")
     @JvmField
-    val title: String?,
+    val title: String,
 
     @field:Schema(description = "대회 일자", example = "2020-02-02")
     @JvmField
-    val eventDate: LocalDate?,
+    val eventDate: LocalDate,
 
     @field:Schema(description = "마라톤 상태", example = "CANCELED")
     @JvmField
-    val status: MarathonStatus?,
+    val status: MarathonStatus,
 
     @field:Schema(description = "코스 목록")
     @JvmField

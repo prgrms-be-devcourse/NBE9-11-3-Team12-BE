@@ -43,7 +43,7 @@ data class UpdateMarathonReq(
     @field:Schema(description = "수정할 코스 목록")
     @field:Valid
     @JvmField
-    val courses: List<UpdateCourseItemReq?>?
+    val courses: List<UpdateCourseItemReq>?
 ) {
 
     @Schema(description = "마라톤 코스 수정용 요청 DTO")
