@@ -4,6 +4,7 @@ import com.rungo.api.domain.marathon.course.entity.Course;
 import com.rungo.api.domain.marathon.course.repository.CourseRepository;
 import com.rungo.api.domain.marathon.marathon.entity.Marathon;
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
+import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.notification.event.RegistrationCompletedEvent;
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq;
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes;
@@ -55,6 +56,9 @@ class RegistrationCommandServiceTest {
 
     @Mock
     private CourseRepository courseRepository;
+
+    @Mock
+    private MarathonRepository marathonRepository;
 
     @Mock
     private UserRepository userRepository;
