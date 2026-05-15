@@ -14,6 +14,7 @@ import com.rungo.api.domain.registration.repository.RegistrationRepository;
 import com.rungo.api.domain.users.entity.Users;
 import com.rungo.api.domain.users.enumtype.Gender;
 import com.rungo.api.domain.users.enumtype.Role;
+import com.rungo.api.domain.users.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -31,6 +33,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,6 +55,12 @@ class RegistrationReadServiceTest {
 
     @Mock
     private MarathonRepository marathonRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Test
     @DisplayName("내 접수 조회 성공 - ACTIVE 조회 시 appliedAt, id 내림차순으로 정상 접수 목록을 반환한다")
@@ -87,7 +96,7 @@ class RegistrationReadServiceTest {
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(registrationRepository).findByUser_Id(org.mockito.ArgumentMatchers.eq(userId), pageableCaptor.capture());
-        verify(registrationCancelHistoryRepository, never()).findByUserId(any(), any());
+        verify(registrationCancelHistoryRepository, never()).findByUserId(anyLong(), any());
 
         Pageable captured = pageableCaptor.getValue();
         assertEquals(0, captured.getPageNumber());
@@ -157,15 +166,15 @@ class RegistrationReadServiceTest {
 
         given(registrationCancelHistoryRepository.findByUserId(org.mockito.ArgumentMatchers.eq(userId), any(Pageable.class)))
                 .willReturn(page);
-        given(marathonRepository.findAllById(List.of(100L))).willReturn(List.of(marathon));
-        given(courseRepository.findAllById(List.of(200L))).willReturn(List.of(course));
+        given(marathonRepository.findAllById(java.util.Set.of(100L))).willReturn(List.of(marathon));
+        given(courseRepository.findAllById(java.util.Set.of(200L))).willReturn(List.of(course));
 
         MyRegistrationRes result = registrationService.getMyRegistrations(userId, MyRegistrationStatusFilter.CANCELED, pageable);
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(registrationCancelHistoryRepository)
                 .findByUserId(org.mockito.ArgumentMatchers.eq(userId), pageableCaptor.capture());
-        verify(registrationRepository, never()).findByUser_Id(any(), any());
+        verify(registrationRepository, never()).findByUser_Id(anyLong(), any());
 
         Pageable captured = pageableCaptor.getValue();
         assertEquals(1, captured.getPageNumber());
