@@ -5,7 +5,6 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
-import jakarta.validation.constraints.NotNull
 import org.springframework.web.multipart.MultipartFile
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -30,7 +29,6 @@ data class CreateMarathonReq(
     val detailedAddress: String,
 
     @field:Schema(description = "대회 일자", example = "2020-02-02")
-    @field:NotNull(message = "대회 일자는 필수입니다.")
     @JvmField
     val eventDate: LocalDate,
 
@@ -39,12 +37,10 @@ data class CreateMarathonReq(
     val posterImage: MultipartFile,
 
     @field:Schema(description = "접수 시작 일시", example = "2020-02-02T02:02:02")
-    @field:NotNull(message = "접수 시작일시는 필수입니다.")
     @JvmField
     val registrationStartAt: LocalDateTime,
 
     @field:Schema(description = "접수 종료 일시", example = "2020-02-02T02:02:02")
-    @field:NotNull(message = "접수 종료일시는 필수입니다.")
     @JvmField
     val registrationEndAt: LocalDateTime,
 
@@ -62,13 +58,11 @@ data class CreateMarathonReq(
         val courseType: String,
 
         @field:Schema(description = "참가비", example = "50000")
-        @field:NotNull(message = "참가비는 필수입니다.")
         @field:Min(value = 0, message = "참가비는 0 이상이어야 합니다.")
         @JvmField
         val price: BigDecimal,
 
         @field:Schema(description = "정원", example = "300")
-        @field:NotNull(message = "정원은 필수입니다.")
         @field:Min(value = 1, message = "정원은 1 이상이어야 합니다.")
         @JvmField
         val capacity: Int
