@@ -90,8 +90,8 @@ public class AuthController {
     ) {
         TokenRes tokenRes = authService.tokenReissue(refreshToken);
 
-        CookieUtil.addCookie(response, "accessToken", tokenRes.accessToken(), ACCESS_TOKEN_EXPIRE);
-        CookieUtil.addCookie(response, "refreshToken", tokenRes.refreshToken(), REFRESH_TOKEN_EXPIRE);
+        CookieUtil.addCookie(response, "accessToken", tokenRes.accessToken, ACCESS_TOKEN_EXPIRE);
+        CookieUtil.addCookie(response, "refreshToken", tokenRes.refreshToken, REFRESH_TOKEN_EXPIRE);
 
         return ResponseEntity.ok(ApiResponse.okMessage("토큰이 재발급되었습니다."));
     }

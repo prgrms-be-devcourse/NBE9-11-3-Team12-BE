@@ -227,8 +227,8 @@ class AuthServiceTest {
 
         TokenRes result = authService.tokenReissue(refreshToken);
 
-        assertNotNull(result.accessToken());
-        assertNotNull(result.refreshToken());
+        assertNotNull(result.accessToken);
+        assertNotNull(result.refreshToken);
         then(authTransactionService).should().reissueToken(1L, refreshToken);
     }
 
