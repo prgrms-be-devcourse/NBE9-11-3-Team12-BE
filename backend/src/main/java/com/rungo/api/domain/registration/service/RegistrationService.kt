@@ -67,14 +67,14 @@ class RegistrationService(
         }
 
         val registration = Registration.create(
-            user,
-            course,
-            marathon,
-            request.snapZipCode,
-            request.snapAddress,
-            request.snapDetail,
-            request.tSize,
-            request.agreedTerms
+            user = user,
+            course = course,
+            marathon = marathon,
+            snapZipCode = request.snapZipCode,
+            snapAddress = request.snapAddress,
+            snapDetail = request.snapDetail,
+            tSize = request.tSize,
+            agreedTerms = request.agreedTerms
         )
 
         val updatedRows = courseRepository.increaseCurrentCountIfNotFull(course.id)
