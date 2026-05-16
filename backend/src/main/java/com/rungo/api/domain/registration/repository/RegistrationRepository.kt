@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.util.*
 
 interface RegistrationRepository : JpaRepository<Registration, Long> {
     @EntityGraph(attributePaths = ["marathon", "course"])
@@ -15,7 +14,7 @@ interface RegistrationRepository : JpaRepository<Registration, Long> {
 
 //    @EntityGraph(attributePaths = {"marathon", "course"})
 //    Page<Registration> findByUser_IdAndStatus(Long userId, RegistrationStatus status, Pageable pageable);
-    @EntityGraph(attributePaths = ["user", "course"])
+    @EntityGraph(attributePaths = ["user", "course", "marathon"])
     fun findAllByMarathon_IdOrderByAppliedAtDesc(marathonId: Long): List<Registration>
 
     @EntityGraph(attributePaths = ["course"])
@@ -40,7 +39,7 @@ interface RegistrationRepository : JpaRepository<Registration, Long> {
     ): Page<Registration>
 
     @EntityGraph(attributePaths = ["marathon", "course"])
-    fun findByIdAndMarathon_Id(registrationId: Long, marathonId: Long): Optional<Registration>
+    fun findByIdAndMarathon_Id(registrationId: Long, marathonId: Long): Registration?
 
     @Query(
         """

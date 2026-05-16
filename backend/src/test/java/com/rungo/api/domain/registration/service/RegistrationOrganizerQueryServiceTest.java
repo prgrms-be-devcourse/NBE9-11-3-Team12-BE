@@ -183,7 +183,7 @@ class RegistrationOrganizerQueryServiceTest {
 
         given(marathonRepository.findById(marathonId)).willReturn(Optional.of(marathon));
         given(registrationRepository.findByIdAndMarathon_Id(registrationId, marathonId))
-                .willReturn(Optional.of(registration));
+                .willReturn(registration);
 
         RegistrationParticipantDetailRes result =
                 registrationOrganizerQueryService.getMarathonParticipantDetail(
@@ -259,7 +259,7 @@ class RegistrationOrganizerQueryServiceTest {
 
         given(marathonRepository.findById(marathonId)).willReturn(Optional.of(marathon));
         given(registrationRepository.findByIdAndMarathon_Id(registrationId, marathonId))
-                .willReturn(Optional.empty());
+                .willReturn(null);
 
         CustomException exception = assertThrows(
                 CustomException.class,
