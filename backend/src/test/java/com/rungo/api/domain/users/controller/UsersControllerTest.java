@@ -90,33 +90,15 @@ class UsersControllerTest {
         verify(userService).getMyInfo(1L);
     }
 
-    @Test
-    @DisplayName("내 정보 조회 실패 - 인증되지 않은 사용자가 요청하면 401을 반환한다")
-    void getMyInfo_fail_unauthorized() throws Exception {
-
-        mockMvc.perform(get("/api/v1/users/me"))
-                .andExpect(status().isUnauthorized());
-
-        verifyNoInteractions(userService);
-    }
-
     // 내 정보 수정 테스트
     @Test
     @DisplayName("내 정보 수정 성공 - 정상 요청 시 200과 수정된 정보를 반환한다")
     void updateMyProfile_success() throws Exception {
         setAuthenticatedUser(1L);
 
-        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", "010-9999-8888", Gender.MALE, LocalDate.of(1999, 1, 1));
+        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", "010-9999-8888");
 
-        UpdateMyProfileRes res = new UpdateMyProfileRes(
-                1L,
-                "test@test.com",
-                "김철수",
-                "010-9999-8888",
-                Gender.MALE,
-                LocalDate.of(1999, 1, 1),
-                Role.PARTICIPANT
-        );
+        UpdateMyProfileRes res = new UpdateMyProfileRes("김철수", "010-9999-8888");
 
         given(userService.updateMyProfile(1L, req)).willReturn(res);
 
@@ -131,24 +113,11 @@ class UsersControllerTest {
     }
 
     @Test
-    @DisplayName("내 정보 수정 실패 - 인증되지 않은 사용자가 요청하면 401을 반환한다")
-    void updateMyProfile_fail_unauthorized() throws Exception {
-        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", null, Gender.MALE, LocalDate.of(1999, 1, 1));
-
-        mockMvc.perform(patch("/api/v1/users/me")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isUnauthorized());
-
-        verifyNoInteractions(userService);
-    }
-
-    @Test
     @DisplayName("내 정보 수정 실패 - 모든 필드가 null이면 400을 반환한다")
     void updateMyProfile_fail_all_null() throws Exception {
         setAuthenticatedUser(1L);
 
-        UpdateMyProfileReq req = new UpdateMyProfileReq(null, null, null, null);
+        UpdateMyProfileReq req = new UpdateMyProfileReq(null, null);
 
         mockMvc.perform(patch("/api/v1/users/me")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -84,7 +84,7 @@ class UsersServiceTest {
                 .role(Role.PARTICIPANT)
                 .build();
 
-        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", "010-9999-8888", Gender.MALE, LocalDate.of(1999, 1, 1));
+        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", "010-9999-8888");
 
         given(usersRepository.findById(1L)).willReturn(Optional.of(user));
 
@@ -107,7 +107,7 @@ class UsersServiceTest {
                 .role(Role.PARTICIPANT)
                 .build();
 
-        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", null, Gender.MALE, LocalDate.of(1999, 1, 1));
+        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", null);
 
         given(usersRepository.findById(1L)).willReturn(Optional.of(user));
 
@@ -130,7 +130,7 @@ class UsersServiceTest {
                 .role(Role.PARTICIPANT)
                 .build();
 
-        UpdateMyProfileReq req = new UpdateMyProfileReq(null, "010-9999-8888", Gender.MALE, LocalDate.of(1999, 1, 1));
+        UpdateMyProfileReq req = new UpdateMyProfileReq(null, "010-9999-8888");
 
         given(usersRepository.findById(1L)).willReturn(Optional.of(user));
 
@@ -143,7 +143,7 @@ class UsersServiceTest {
     @Test
     @DisplayName("내 정보 수정 실패 - 존재하지 않는 userId면 USER_NOT_FOUND 예외가 발생한다")
     void updateMyProfile_fail_user_not_found() {
-        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", "010-1234-5678", Gender.MALE, LocalDate.of(1999, 1, 1));
+        UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", "010-1234-5678");
 
         given(usersRepository.findById(anyLong())).willReturn(Optional.empty());
 
