@@ -11,8 +11,8 @@ import com.rungo.api.domain.marathon.marathon.entity.Marathon;
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent;
-import com.rungo.api.domain.registration.repository.RegistrationRepository;
 import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRepository;
+import com.rungo.api.domain.registration.repository.RegistrationRepository;
 import com.rungo.api.domain.users.entity.Users;
 import com.rungo.api.domain.users.enumtype.Gender;
 import com.rungo.api.domain.users.enumtype.Role;
@@ -25,7 +25,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class MarathonServiceTest {
 
-    @InjectMocks
     private MarathonService marathonService;
 
     @Mock
@@ -72,8 +70,16 @@ class MarathonServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(marathonService, "minDaysBetweenStartAndEnd", 1L);
-        ReflectionTestUtils.setField(marathonService, "minDaysBetweenEndAndEvent", 1L);
+        marathonService = new MarathonService(
+                marathonRepository,
+                userRepository,
+                registrationRepository,
+                registrationCancelHistoryRepository,
+                eventPublisher,
+                fileStorageService,
+                1L,
+                1L
+        );
     }
 
     @Test
@@ -777,7 +783,6 @@ class MarathonServiceTest {
                 MarathonStatus.OPEN
         );
 
-        ReflectionTestUtils.setField(marathon, "id", 10L);
 
         UpdateMarathonReq request = new UpdateMarathonReq(
                 "수정된 서울 마라톤",

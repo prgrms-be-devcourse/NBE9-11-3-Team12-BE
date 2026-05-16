@@ -42,13 +42,13 @@ class MarathonService(
     private val registrationCancelHistoryRepository: RegistrationCancelHistoryRepository,
     private val eventPublisher: ApplicationEventPublisher,
     private val fileStorageService: FileStorageService,
+    @Value("\${marathon.min-days.start-to-end}")
+    private val minDaysBetweenStartAndEnd: Long,
+    @Value("\${marathon.min-days.end-to-event}")
+    private val minDaysBetweenEndAndEvent: Long,
 
 ) {
-    @Value("\${marathon.min-days.start-to-end}")
-    private val minDaysBetweenStartAndEnd: Long = 0
 
-    @Value("\${marathon.min-days.end-to-event}")
-    private val minDaysBetweenEndAndEvent: Long = 0
 
     @Transactional
     fun createMarathon(id: Long, req: CreateMarathonReq): CreateMarathonRes {
