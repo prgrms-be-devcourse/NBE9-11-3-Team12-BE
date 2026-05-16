@@ -7,7 +7,6 @@ import com.rungo.api.global.exception.ErrorCode
 import com.rungo.api.global.response.ApiResponse
 import com.rungo.api.global.util.CookieUtil
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
@@ -18,6 +17,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.web.bind.annotation.*
+import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -105,16 +105,12 @@ class AuthController(
     }
 
     private fun extractEmail(authentication: Authentication?): String {
-        val principal = authentication?.principal
-            ?: throw CustomException(ErrorCode.UNAUTHORIZED)
-
-        return when (principal) {
+        return when (val principal = authentication?.principal) {
             is OAuth2User -> principal.attributes["email"] as? String
-                ?: throw CustomException(ErrorCode.UNAUTHORIZED)
             is UserDetails -> principal.username
             is String -> principal
-            else -> throw CustomException(ErrorCode.UNAUTHORIZED)
-        }
+            else -> null
+        } ?: throw CustomException(ErrorCode.UNAUTHORIZED)
     }
 
     companion object {
