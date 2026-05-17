@@ -12,39 +12,49 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener::class)
-class Users(
+class Users protected constructor() {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null
+        protected set
 
     @Column(nullable = false, unique = true, length = 100)
-    val email: String,
+    lateinit var email: String
+        protected set
 
     @Column(nullable = false, length = 50)
-    var name: String,
+    lateinit var name: String
+        protected set
 
     @Column(name = "phone_number", length = 20)
-    var phoneNumber: String? = null,
+    var phoneNumber: String? = null
+        protected set
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var role: Role,
+    lateinit var role: Role
+        protected set
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
-    var createdAt: LocalDateTime? = null,
+    lateinit var createdAt: LocalDateTime
+        protected set
 
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime? = null,
+    lateinit var updatedAt: LocalDateTime
+        protected set
 
     @Enumerated(EnumType.STRING)
     @Column
-    var gender: Gender? = null,
+    var gender: Gender? = null
+        protected set
 
     @Column
-    var birth: LocalDate? = null,
-) {
+    var birth: LocalDate? = null
+        protected set
+
     fun updateProfile(name: String?, phoneNumber: String?) {
         name?.let { this.name = it }
         phoneNumber?.let { this.phoneNumber = it }
@@ -64,37 +74,45 @@ class Users(
     val isProfileCompleted: Boolean
         get() = phoneNumber != null && gender != null && birth != null
 
-    // java용 임시 빌더 추가 //
     companion object {
         @JvmStatic
+        fun create(
+            email: String,
+            name: String,
+            role: Role,
+        ): Users = Users().apply {
+            this.email = email
+            this.name = name
+            this.role = role
+        }
+
+        // java용 임시 빌더 추가 //
+        @JvmStatic
         fun builder() = Builder()
+    }
 
-        class Builder {
-            private var id: Long? = null
-            private var email: String = ""
-            private var name: String = ""
-            private var phoneNumber: String? = null
-            private var role: Role = Role.PARTICIPANT
-            private var gender: Gender? = null
-            private var birth: LocalDate? = null
+    class Builder {
+        private var email: String = ""
+        private var name: String = ""
+        private var phoneNumber: String? = null
+        private var role: Role = Role.PARTICIPANT
+        private var gender: Gender? = null
+        private var birth: LocalDate? = null
 
-            fun id(id: Long) = apply { this.id = id }
-            fun email(email: String) = apply { this.email = email }
-            fun name(name: String) = apply { this.name = name }
-            fun phoneNumber(phoneNumber: String?) = apply { this.phoneNumber = phoneNumber }
-            fun role(role: Role) = apply { this.role = role }
-            fun gender(gender: Gender?) = apply { this.gender = gender }
-            fun birth(birth: LocalDate?) = apply { this.birth = birth }
+        fun email(email: String) = apply { this.email = email }
+        fun name(name: String) = apply { this.name = name }
+        fun phoneNumber(phoneNumber: String?) = apply { this.phoneNumber = phoneNumber }
+        fun role(role: Role) = apply { this.role = role }
+        fun gender(gender: Gender?) = apply { this.gender = gender }
+        fun birth(birth: LocalDate?) = apply { this.birth = birth }
 
-            fun build() = Users(
-                id = id,
-                email = email,
-                name = name,
-                phoneNumber = phoneNumber,
-                role = role,
-                gender = gender,
-                birth = birth,
-            )
+        fun build() = Users().apply {
+            this.email = this@Builder.email
+            this.name = this@Builder.name
+            this.phoneNumber = this@Builder.phoneNumber
+            this.role = this@Builder.role
+            this.gender = this@Builder.gender
+            this.birth = this@Builder.birth
         }
     }
 }
