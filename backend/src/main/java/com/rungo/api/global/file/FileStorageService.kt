@@ -11,10 +11,10 @@ import java.nio.file.Paths
 import java.util.*
 
 @Service
-class FileStorageService {
+class FileStorageService(
     @Value("\${file.upload-dir}")
-    private lateinit var uploadDir: String
-
+    private val uploadDir: String,
+) {
     fun saveMarathonPoster(file: MultipartFile?): String? {
         if (file == null || file.isEmpty) return null
 
