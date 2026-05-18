@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType
 import io.swagger.v3.oas.annotations.info.Contact
 import io.swagger.v3.oas.annotations.info.Info
 import io.swagger.v3.oas.annotations.security.SecurityScheme
+import io.swagger.v3.oas.annotations.security.SecuritySchemes
 import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,12 +23,23 @@ import org.springframework.context.annotation.Configuration
         ),
     ),
 )
-@SecurityScheme(
-    name = "accessTokenCookie",
-    type = SecuritySchemeType.APIKEY,
-    `in` = SecuritySchemeIn.COOKIE,
-    paramName = "accessToken",
-    description = "로그인 성공 후 발급되는 accessToken 쿠키 기반 인증",
+@SecuritySchemes(
+    value = [
+        SecurityScheme(
+            name = "accessTokenCookie",
+            type = SecuritySchemeType.APIKEY,
+            `in` = SecuritySchemeIn.COOKIE,
+            paramName = "accessToken",
+            description = "로그인 성공 후 발급되는 accessToken 쿠키 기반 인증",
+        ),
+        SecurityScheme(
+            name = "refreshTokenCookie",
+            type = SecuritySchemeType.APIKEY,
+            `in` = SecuritySchemeIn.COOKIE,
+            paramName = "refreshToken",
+            description = "토큰 재발급에 사용하는 refreshToken 쿠키 기반 인증",
+        ),
+    ],
 )
 class SpringDoc {
 

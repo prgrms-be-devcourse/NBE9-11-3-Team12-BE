@@ -26,6 +26,6 @@ data class MyProfileRes(
     @field:Schema(description = "생년월일", example = "1990-01-01")
     val birth: LocalDate?,
 
-    @field:Schema(description = "사용자 역할", example = "USER")
+    @field:Schema(description = "사용자 역할", example = "PARTICIPANT")
     val role: Role
 ) 

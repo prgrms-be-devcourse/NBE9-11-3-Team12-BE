@@ -8,6 +8,7 @@ import com.rungo.api.global.response.ApiResponse
 import com.rungo.api.global.util.CookieUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
@@ -63,7 +64,6 @@ class AuthController(
     @Operation(summary = "로그아웃", description = "refreshToken 쿠키와 Redis 저장값을 제거합니다.")
     @ApiResponses(
         SwaggerResponse(responseCode = "200", description = "로그아웃 성공"),
-        SwaggerResponse(responseCode = "401", description = "유효하지 않은 토큰")
     )
     fun logout(
         @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
@@ -74,6 +74,7 @@ class AuthController(
     }
 
     @PostMapping("/reissue")
+    @SecurityRequirement(name = "refreshTokenCookie")
     @Operation(summary = "토큰 재발급", description = "refreshToken 쿠키를 accessToken과 검증하고 토큰을 재발급합니다.")
     @ApiResponses(
         SwaggerResponse(responseCode = "200", description = "토큰 재발급 성공"),
@@ -94,6 +95,7 @@ class AuthController(
 
     @GetMapping("/me")
     @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자 정보를 조회합니다.")
+    @SecurityRequirement(name = "accessTokenCookie")
     @ApiResponses(
         SwaggerResponse(responseCode = "200", description = "조회 성공"),
         SwaggerResponse(responseCode = "401", description = "인증되지 않은 사용자")
