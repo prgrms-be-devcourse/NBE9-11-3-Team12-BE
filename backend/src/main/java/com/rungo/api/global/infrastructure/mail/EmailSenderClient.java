@@ -36,23 +36,23 @@ public class EmailSenderClient {
     public void send(EmailMessage emailMessage) {
         if (!mailEnabled) {
             log.info("메일 전송 비활성화 상태 - skip: to={}, subject={}",
-                    emailMessage.to(), emailMessage.subject());
+                    emailMessage.to, emailMessage.subject);
             return;
         }
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(emailMessage.to());
-            message.setSubject(emailMessage.subject());
-            message.setText(emailMessage.body());
+            message.setTo(emailMessage.to);
+            message.setSubject(emailMessage.subject);
+            message.setText(emailMessage.body);
             message.setFrom(fromEmail);
 
             mailSender.send(message);
 
-            log.info("이메일 발송 성공: to={}, subject={}", emailMessage.to(), emailMessage.subject());
+            log.info("이메일 발송 성공: to={}, subject={}", emailMessage.to, emailMessage.subject);
         } catch (MailException ex) {
             log.warn("이메일 발송 실패 - 재시도 예정: to={}, subject={}",
-                    emailMessage.to(), emailMessage.subject(), ex);
+                    emailMessage.to, emailMessage.subject, ex);
             throw new EmailSendException("이메일 발송 실패", ex);
         }
     }
@@ -60,6 +60,6 @@ public class EmailSenderClient {
     @Recover
     public void recover(EmailSendException ex, EmailMessage emailMessage) {
         log.error("이메일 최종 발송 실패: to={}, subject={}",
-                emailMessage.to(), emailMessage.subject(), ex);
+                emailMessage.to, emailMessage.subject, ex);
     }
 }

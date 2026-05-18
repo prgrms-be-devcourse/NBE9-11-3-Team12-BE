@@ -18,10 +18,10 @@ class NotificationEmailFactoryTest {
     void registrationCompleted_test() {
         EmailMessage message = factory.registrationCompleted("user@test.com", "서울 마라톤", "10K");
 
-        assertEquals("user@test.com", message.to());
-        assertTrue(message.subject().contains("참가 접수 완료"));
-        assertTrue(message.body().contains("서울 마라톤"));
-        assertTrue(message.body().contains("10K"));
+        assertEquals("user@test.com", message.to);
+        assertTrue(message.subject.contains("참가 접수 완료"));
+        assertTrue(message.body.contains("서울 마라톤"));
+        assertTrue(message.body.contains("10K"));
     }
 
     @Test
@@ -29,9 +29,9 @@ class NotificationEmailFactoryTest {
     void marathonCanceled_test() {
         EmailMessage message = factory.marathonCanceled("user@test.com", "서울 마라톤");
 
-        assertEquals("user@test.com", message.to());
-        assertTrue(message.subject().contains("대회 취소"));
-        assertTrue(message.body().contains("서울 마라톤"));
+        assertEquals("user@test.com", message.to);
+        assertTrue(message.subject.contains("대회 취소"));
+        assertTrue(message.body.contains("서울 마라톤"));
     }
 
     @Test
@@ -44,9 +44,9 @@ class NotificationEmailFactoryTest {
                 BigDecimal.valueOf(60000)
         );
 
-        assertEquals("user@test.com", message.to());
-        assertTrue(message.subject().contains("결제 완료"));
-        assertTrue(message.body().contains("60000"));
+        assertEquals("user@test.com", message.to);
+        assertTrue(message.subject.contains("결제 완료"));
+        assertTrue(message.body.contains("60000"));
     }
 
     @Test
@@ -58,8 +58,8 @@ class NotificationEmailFactoryTest {
                 BigDecimal.valueOf(60000)
         );
 
-        assertEquals("user@test.com", message.to());
-        assertTrue(message.subject().contains("환불 완료"));
-        assertTrue(message.body().contains("60000"));
+        assertEquals("user@test.com", message.to);
+        assertTrue(message.subject.contains("환불 완료"));
+        assertTrue(message.body.contains("60000"));
     }
 }
