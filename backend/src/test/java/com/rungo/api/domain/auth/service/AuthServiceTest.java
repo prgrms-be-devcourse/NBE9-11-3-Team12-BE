@@ -88,6 +88,8 @@ class AuthServiceTest {
                 .role(Role.PARTICIPANT)
                 .build();
 
+        ReflectionTestUtils.setField(savedUser, "createdAt", java.time.LocalDateTime.now());
+
         given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
         given(passwordEncoder.encode(anyString())).willReturn("encoded-pass");
         given(userRepository.save(any(Users.class))).willReturn(savedUser);
@@ -200,7 +202,7 @@ class AuthServiceTest {
         authService.logout(null, response);
 
         // Redis 삭제가 호출되지 않아야 함
-        then(refreshTokenService).should(never()).deleteRefreshToken(any());
+        then(refreshTokenService).should(never()).deleteRefreshToken(anyLong());
     }
 
     @Test
@@ -211,7 +213,7 @@ class AuthServiceTest {
         authService.logout("invalid-token", response);
 
         // Redis 삭제가 호출되지 않아야 함
-        then(refreshTokenService).should(never()).deleteRefreshToken(any());
+        then(refreshTokenService).should(never()).deleteRefreshToken(anyLong());
     }
 
     // 토큰 재발급 테스트
