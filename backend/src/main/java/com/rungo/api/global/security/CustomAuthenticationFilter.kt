@@ -26,55 +26,21 @@ class CustomAuthenticationFilter(
         filterChain: FilterChain
     ) {
 
-        val cookies = request.cookies
+        val token = request.cookies
+            ?.find { it.name == "accessToken" }
+            ?.value
 
-        cookies?.forEach { cookie ->
+        if (token != null && JwtUtil.validateToken(token, jwtSecret)) {
 
-            if (cookie.name == "accessToken") {
+            val claims = JwtUtil.getClaims(token, jwtSecret)
+            val id = (claims["id"] as Number).toLong()
+            val email = claims.get("email", String::class.java)
+            val role = Role.valueOf(claims.get("role", String::class.java))
+            val authorities = listOf(SimpleGrantedAuthority("ROLE_${role.name}"))
+            val securityUser = SecurityUser(id, email, role, authorities)
 
-                val token = cookie.value
-
-                if (JwtUtil.validateToken(token, jwtSecret)) {
-
-                    val claims = JwtUtil.getClaims(token, jwtSecret)
-
-                    val id = (claims["id"] as Number).toLong()
-                    val email = claims.get("email", String::class.java)
-                    val roleStr = claims.get("role", String::class.java)
-
-                    val role = Role.valueOf(roleStr)
-
-                    val authorities = listOf(
-                        SimpleGrantedAuthority("ROLE_${role.name}")
-                    )
-
-                    val securityUser = SecurityUser(
-                        id,
-                        email,
-                        role,
-                        authorities
-                    )
-
-                    val authentication =
-                        UsernamePasswordAuthenticationToken(
-                            securityUser,
-                            null,
-                            authorities
-                        )
-
-                    SecurityContextHolder.getContext()
-                        .authentication = authentication
-                }
-
-//                else {
-//                    response.status = HttpServletResponse.SC_UNAUTHORIZED
-//                    response.contentType = "application/json;charset=UTF-8"
-//                    response.writer.write(
-//                        """{"message":"유효하지 않은 액세스 토큰입니다."}"""
-//                    )
-//                    return
-//                }
-            }
+            SecurityContextHolder.getContext().authentication =
+                UsernamePasswordAuthenticationToken(securityUser, null, authorities)
         }
 
         filterChain.doFilter(request, response)
