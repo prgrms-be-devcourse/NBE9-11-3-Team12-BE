@@ -15,6 +15,6 @@ data class LoginRes(
         @field:Schema(description = "사용자 이름", example = "홍길동")
         val name: String,
 
-        @field:Schema(description = "권한", example = "USER")
+        @field:Schema(description = "권한", example = "PARTICIPANT")
         val role: Role
 )

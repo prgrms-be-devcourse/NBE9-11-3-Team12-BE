@@ -27,7 +27,7 @@ data class SignUpRes(
         @field:Schema(description = "생년월일", example = "2000-01-01")
         val birth: LocalDate,
 
-        @field:Schema(description = "권한", example = "USER")
+        @field:Schema(description = "권한", example = "PARTICIPANT")
         val role: Role,
 
         @field:Schema(description = "생성 시각", example = "2020-02-02T02:02:02")

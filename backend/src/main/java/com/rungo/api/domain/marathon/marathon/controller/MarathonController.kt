@@ -108,7 +108,7 @@ class MarathonController(
     @SecurityRequirement(name = "accessTokenCookie")
     @Operation(summary = "마라톤 수정", description = "기존 마라톤 정보를 수정합니다.")
     @ApiResponses(
-        SwaggerResponse(responseCode = "201", description = "수정 성공"),
+        SwaggerResponse(responseCode = "200", description = "수정 성공"),
         SwaggerResponse(responseCode = "400", description = "입력값 검증 실패"),
         SwaggerResponse(responseCode = "401", description = "인증 필요"),
         SwaggerResponse(responseCode = "403", description = "권한 없음"),

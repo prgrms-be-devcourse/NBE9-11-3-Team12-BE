@@ -58,10 +58,10 @@ data class MyRegistrationRes(
     @Schema(description = "내 접수 목록 항목 DTO")
     @JvmRecord
     data class Item(
-        @field:Schema(description = "현재 접수 ID 또는 취소 이력 ID", example = "100")
+        @field:Schema(description = "정상 접수 조회 시 현재 접수 ID / 취소 이력 조회 시 취소 이력 ID", example = "100")
         val registrationId: Long,
 
-        @field:Schema(description = "원본 접수 ID(취소 이력 조회 시 사용)", example = "200")
+        @field:Schema(description = "취소 이력 조회 시 원본 접수 ID", example = "200")
         val historyId: Long?,
 
         @field:Schema(description = "마라톤 ID", example = "1")
@@ -76,7 +76,7 @@ data class MyRegistrationRes(
         @field:Schema(description = "코스 종류", example = "10KM")
         val courseType: String,
 
-        @field:Schema(description = "접수 상태", example = "COMPLETED")
+        @field:Schema(description = "접수 상태", example = "ACTIVE")
         val status: String,
 
         @field:Schema(description = "결제 금액", example = "50000")
