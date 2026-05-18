@@ -91,6 +91,7 @@ class SecurityConfig(
                         "/v3/api-docs/**",
                         "/actuator/prometheus",
                         "/actuator/**",
+                        "/uploads/**",
                     ).permitAll()
 
                     // 마라톤
