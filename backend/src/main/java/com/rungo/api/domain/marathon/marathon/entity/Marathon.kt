@@ -52,8 +52,9 @@ class Marathon protected constructor() {
         protected set
 
     @Column(length = 500)
-    lateinit var posterImageUrl: String
+    var posterImageUrl: String?  = null
         protected set
+
 
     @CreatedDate
     @Column(name = "created_at", nullable = false)
@@ -159,7 +160,7 @@ class Marathon protected constructor() {
             region: String,
             detailedAddress: String,
             eventDate: LocalDate,
-            posterImageUrl: String,
+            posterImageUrl: String?,
             registrationStartAt: LocalDateTime,
             registrationEndAt: LocalDateTime
         ): Marathon {

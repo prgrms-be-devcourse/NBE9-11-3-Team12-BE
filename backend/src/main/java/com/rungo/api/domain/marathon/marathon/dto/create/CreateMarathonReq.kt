@@ -34,7 +34,7 @@ data class CreateMarathonReq(
 
     @field:Schema(description = "포스터 이미지", type = "string", format = "binary")
     @JvmField
-    val posterImage: MultipartFile,
+    val posterImage: MultipartFile?,
 
     @field:Schema(description = "접수 시작 일시", example = "2020-02-02T02:02:02")
     @JvmField
