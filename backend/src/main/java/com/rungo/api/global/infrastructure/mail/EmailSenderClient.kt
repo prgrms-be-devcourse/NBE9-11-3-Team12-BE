@@ -13,15 +13,14 @@ import org.springframework.stereotype.Component
 
 @Component
 class EmailSenderClient(
-    private val mailSender: JavaMailSender
-) {
+    private val mailSender: JavaMailSender,
 
     @Value("\${spring.mail.username}")
-    private lateinit var fromEmail: String
+    private val fromEmail: String,
 
     @Value("\${app.mail.enabled:true}")
-    private var mailEnabled: Boolean = true
-
+    private val mailEnabled: Boolean
+){
     @Retryable(
         retryFor = [EmailSendException::class],
         maxAttemptsExpression = "\${spring.mail.retry.max-attempts:3}",
