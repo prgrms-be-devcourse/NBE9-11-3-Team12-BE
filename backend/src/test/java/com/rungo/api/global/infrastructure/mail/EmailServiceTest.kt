@@ -1,5 +1,6 @@
 package com.rungo.api.global.infrastructure.mail
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +15,7 @@ class EmailServiceTest {
     @Test
     // 수동 테스트 시 @Disabled 주석 처리 후 실행
     // @Disabled 사용 시 수동 실행해도 테스트 스킵
-//    @Disabled("실제 SMTP 서버를 사용하는 수동 검증용 테스트")
+    @Disabled("실제 SMTP 서버를 사용하는 수동 검증용 테스트")
     @DisplayName("실제 SMTP 서버를 통해 이메일이 정상적으로 전송되는지 확인한다")
     fun real_email_send_test() {
         val to = "mwon1590@gmail.com" // 본인 실제 이메일로 변경
