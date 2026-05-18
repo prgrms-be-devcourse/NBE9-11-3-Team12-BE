@@ -1,13 +1,11 @@
-package com.rungo.api.global.exception;
+package com.rungo.api.global.exception
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatus
 
-@Getter
-@RequiredArgsConstructor
-public enum ErrorCode {
-
+enum class ErrorCode(
+    val status: HttpStatus,
+    val message: String
+) {
     // 공통
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "잘못된 입력값입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 에러가 발생했습니다."),
@@ -46,8 +44,6 @@ public enum ErrorCode {
     REGISTRATION_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 접수한 대회입니다."),
     REGISTRATION_TERMS_REQUIRED(HttpStatus.BAD_REQUEST, "필수 약관 동의가 필요합니다."),
     CAPACITY_FULL(HttpStatus.BAD_REQUEST, "마라톤 참가 정원이 마감되었습니다."),
-    REGISTRATION_ALREADY_CANCELED(HttpStatus.BAD_REQUEST,"이미 접수 취소한 대회입니다."),
-    CURRENT_COUNT_UNDERFLOW(HttpStatus.BAD_REQUEST,"코스 정원이 이미 0명입니다.");
-    private final HttpStatus status;
-    private final String message;
+    REGISTRATION_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "이미 접수 취소한 대회입니다."),
+    CURRENT_COUNT_UNDERFLOW(HttpStatus.BAD_REQUEST, "코스 정원이 이미 0명입니다.")
 }
