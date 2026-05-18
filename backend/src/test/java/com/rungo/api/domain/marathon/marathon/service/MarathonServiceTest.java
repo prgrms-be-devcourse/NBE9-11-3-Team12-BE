@@ -86,12 +86,9 @@ class MarathonServiceTest {
     @DisplayName("대회 취소 성공 시 참가자들에게 취소 알림 이벤트를 발행한다")
     void cancel_marathon_publish_event_success() {
         // given
-        Users organizer = Users.builder()
-                               .id(1L)
-                               .role(Role.ORGANIZER)
-                               .build();
+        Users organizer = createUser(1L, "주최자", Role.ORGANIZER);
 
-        Marathon marathon = new Marathon(
+        Marathon marathon = Marathon.create(
                 organizer,
                 "서울 마라톤",
                 "서울",
@@ -99,8 +96,7 @@ class MarathonServiceTest {
                 LocalDate.of(2026, 10, 3),
                 "poster.png",
                 LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().plusDays(1),
-                MarathonStatus.OPEN
+                LocalDateTime.now().plusDays(1)
         );
 
         ReflectionTestUtils.setField(marathon, "id", 1L);
@@ -550,7 +546,7 @@ class MarathonServiceTest {
     void get_marathon_detail_fail_canceled() {
 
          Marathon CanceledMarathon
-             = new Marathon(
+             = Marathon.create(
                     createUser(1L,"이순신",Role.ORGANIZER),
                     "서울 마라톤",
                     "서울",
@@ -558,9 +554,9 @@ class MarathonServiceTest {
                     LocalDate.of(2026, 10, 3),
                     "poster.png",
                     LocalDateTime.now().minusDays(10),
-                    LocalDateTime.now().minusDays(5),
-                    MarathonStatus.CANCELED
+                    LocalDateTime.now().minusDays(5)
             );
+        ReflectionTestUtils.setField(CanceledMarathon, "status", MarathonStatus.CANCELED);
 
 
 
@@ -771,7 +767,7 @@ class MarathonServiceTest {
 
         Users organizer = createUser(organizerId, "주최자", Role.ORGANIZER);
 
-        Marathon marathon = new Marathon(
+        Marathon marathon = Marathon.create(
                 organizer,
                 "서울 마라톤",
                 "서울",
@@ -779,8 +775,7 @@ class MarathonServiceTest {
                 LocalDate.of(2026, 10, 3),
                 "poster.png",
                 LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().plusDays(5),
-                MarathonStatus.OPEN
+                LocalDateTime.now().plusDays(5)
         );
 
 
@@ -1076,25 +1071,21 @@ class MarathonServiceTest {
     }
 
     private Users createUser(Long id, String name, Role role) {
+        Users user = Users.create(
+                "test@test.com",
+                name,
+                "010-1111-2222",
+                Gender.MALE,
+                LocalDate.of(2000, 1, 1)
+        );
 
-        return Users.builder()
+        if (role == Role.ORGANIZER) {
+            user.promoteToOrganizer();
+        }
 
-                .id(id)
+        ReflectionTestUtils.setField(user, "id", id);
 
-                .email("test@test.com")
-
-                .name(name)
-
-                .phoneNumber("010-1111-2222")
-
-                .role(role)
-
-                .gender(Gender.MALE)
-
-                .birth(LocalDate.of(2000, 1, 1))
-
-                .build();
-
+        return user;
     }
 
     private MockMultipartFile posterImage(String originalFilename) {
@@ -1107,7 +1098,7 @@ class MarathonServiceTest {
     }
 
     private Marathon createMarathon(Long id, Users organizer, MarathonStatus status) {
-        Marathon marathon = new Marathon(
+        Marathon marathon = Marathon.create(
                 organizer,
                 "서울 마라톤",
                 "서울",
@@ -1115,18 +1106,17 @@ class MarathonServiceTest {
                 LocalDate.of(2026, 10, 3),
                 "poster.png",
                 LocalDateTime.of(2026, 8, 1, 9, 0),
-                LocalDateTime.of(2026, 8, 31, 18, 0),
-                status
+                LocalDateTime.of(2026, 8, 31, 18, 0)
         );
 
-        Course course1 = new Course(
+        Course course1 = Course.create(
                 "5K",
                 BigDecimal.valueOf(30000),
                 100,
                 0
         );
 
-        Course course2 = new Course(
+        Course course2 = Course.create(
                 "10K",
                 BigDecimal.valueOf(50000),
                 200,
@@ -1137,6 +1127,7 @@ class MarathonServiceTest {
         marathon.addCourse(course2);
 
         ReflectionTestUtils.setField(marathon, "id", id);
+        ReflectionTestUtils.setField(marathon, "status", status);
         ReflectionTestUtils.setField(course1, "id", 101L);
         ReflectionTestUtils.setField(course2, "id", 102L);
 

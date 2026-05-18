@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -36,15 +37,7 @@ class UsersServiceTest {
     @Test
     @DisplayName("내 정보 조회 성공 - 유효한 userId로 조회하면 사용자 정보를 반환한다")
     void getMyInfo_success() {
-        Users user = Users.builder()
-                .id(1L)
-                .email("test@test.com")
-                .name("홍길동")
-                .phoneNumber("010-1234-5678")
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(1999, 1, 1))
-                .role(Role.PARTICIPANT)
-                .build();
+        Users user = createUser();
 
         given(usersRepository.findById(1L)).willReturn(Optional.of(user));
 
@@ -74,15 +67,7 @@ class UsersServiceTest {
     @Test
     @DisplayName("내 정보 수정 성공 - 이름과 전화번호를 모두 수정하면 변경된 정보를 반환한다")
     void updateMyProfile_success_both_fields() {
-        Users user = Users.builder()
-                .id(1L)
-                .email("test@test.com")
-                .name("홍길동")
-                .phoneNumber("010-1234-5678")
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(1999, 1, 1))
-                .role(Role.PARTICIPANT)
-                .build();
+        Users user = createUser();
 
         UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", "010-9999-8888");
 
@@ -97,15 +82,7 @@ class UsersServiceTest {
     @Test
     @DisplayName("내 정보 수정 성공 - 이름만 수정하면 전화번호는 기존 값이 유지된다")
     void updateMyProfile_success_only_name() {
-        Users user = Users.builder()
-                .id(1L)
-                .email("test@test.com")
-                .name("홍길동")
-                .phoneNumber("010-1234-5678")
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(1999, 1, 1))
-                .role(Role.PARTICIPANT)
-                .build();
+        Users user = createUser();
 
         UpdateMyProfileReq req = new UpdateMyProfileReq("김철수", null);
 
@@ -120,15 +97,7 @@ class UsersServiceTest {
     @Test
     @DisplayName("내 정보 수정 성공 - 전화번호만 수정하면 이름은 기존 값이 유지된다")
     void updateMyProfile_success_only_phoneNumber() {
-        Users user = Users.builder()
-                .id(1L)
-                .email("test@test.com")
-                .name("홍길동")
-                .phoneNumber("010-1234-5678")
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(1999, 1, 1))
-                .role(Role.PARTICIPANT)
-                .build();
+        Users user = createUser();
 
         UpdateMyProfileReq req = new UpdateMyProfileReq(null, "010-9999-8888");
 
@@ -151,5 +120,19 @@ class UsersServiceTest {
                 () -> usersService.updateMyProfile(999L, req));
 
         assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+    }
+
+    private Users createUser() {
+        Users user = Users.create(
+                "test@test.com",
+                "홍길동",
+                "010-1234-5678",
+                Gender.MALE,
+                LocalDate.of(1999, 1, 1)
+        );
+
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        return user;
     }
 }

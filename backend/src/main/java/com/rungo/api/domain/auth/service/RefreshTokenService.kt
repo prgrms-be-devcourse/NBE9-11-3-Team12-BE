@@ -13,10 +13,10 @@ class RefreshTokenService(
 ) {
     // refreshToken 저장
     fun saveRefreshToken(userId: Long, refreshToken: String) {
-        val token = RefreshToken.builder()
-            .userId(userId)
-            .refreshToken(refreshToken)
-            .build()
+        val token = RefreshToken(
+            userId = userId,
+            refreshToken = refreshToken
+        )
 
         refreshTokenRepository.save(token)
     }

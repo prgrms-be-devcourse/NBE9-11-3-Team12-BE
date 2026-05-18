@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -105,14 +106,20 @@ class AdminServiceTest {
     }
 
     private Users createUser(Long id, String name, Role role) {
-        return Users.builder()
-                .id(id)
-                .email(name + "@test.com")
-                .name(name)
-                .phoneNumber("010-1111-2222")
-                .role(role)
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(2000, 1, 1))
-                .build();
+        Users user = Users.create(
+                name + "@test.com",
+                name,
+                "010-1111-2222",
+                Gender.MALE,
+                LocalDate.of(2000, 1, 1)
+        );
+
+        if (role == Role.ORGANIZER || role == Role.ADMIN) {
+            ReflectionTestUtils.setField(user, "role", role);
+        }
+
+        ReflectionTestUtils.setField(user, "id", id);
+
+        return user;
     }
 }

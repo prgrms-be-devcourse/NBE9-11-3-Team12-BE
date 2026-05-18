@@ -3,7 +3,6 @@ package com.rungo.api.domain.registration.service;
 import com.rungo.api.domain.marathon.course.entity.Course;
 import com.rungo.api.domain.marathon.course.repository.CourseRepository;
 import com.rungo.api.domain.marathon.marathon.entity.Marathon;
-import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.registration.dto.RegistrationOverviewRes;
 import com.rungo.api.domain.registration.dto.RegistrationParticipantDetailRes;
@@ -272,20 +271,25 @@ class RegistrationOrganizerQueryServiceTest {
     }
 
     private Users createUser(Long id, String name, String phoneNumber, Role role) {
-        Users user = Users.builder()
-                .email(name + "@test.com")
-                .name(name)
-                .phoneNumber(phoneNumber)
-                .role(role)
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(1999, 1, 1))
-                .build();
+        Users user = Users.create(
+                name + "@test.com",
+                name,
+                phoneNumber,
+                Gender.MALE,
+                LocalDate.of(1999, 1, 1)
+        );
+
+        if (role == Role.ORGANIZER) {
+            user.promoteToOrganizer();
+        }
+
         ReflectionTestUtils.setField(user, "id", id);
+
         return user;
     }
 
     private Marathon createMarathon(Long marathonId, Users organizer) {
-        Marathon marathon = new Marathon(
+        Marathon marathon = Marathon.create(
                 organizer,
                 "서울 마라톤",
                 "서울",
@@ -293,16 +297,15 @@ class RegistrationOrganizerQueryServiceTest {
                 LocalDate.of(2026, 10, 25),
                 "poster.png",
                 LocalDateTime.of(2026, 4, 1, 0, 0),
-                LocalDateTime.of(2026, 9, 30, 23, 59),
-                MarathonStatus.OPEN
+                LocalDateTime.of(2026, 9, 30, 23, 59)
         );
         ReflectionTestUtils.setField(marathon, "id", marathonId);
         return marathon;
     }
 
     private Course createCourse(Long courseId, Marathon marathon, String courseType, int price, int capacity, int currentCount) {
-        Course course = new Course(courseType, BigDecimal.valueOf(price), capacity, currentCount);
-        course.setMarathon(marathon);
+        Course course = Course.create(courseType, BigDecimal.valueOf(price), capacity, currentCount);
+        marathon.addCourse(course);
         ReflectionTestUtils.setField(course, "id", courseId);
         return course;
     }

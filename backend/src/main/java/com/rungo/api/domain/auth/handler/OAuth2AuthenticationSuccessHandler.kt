@@ -39,7 +39,7 @@ class OAuth2AuthenticationSuccessHandler(
             return
         }
 
-        val user = userRepository.findByEmail(email).orElse(null)
+        val user = userRepository.findByEmail(email)
         if (user == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found")
             return
