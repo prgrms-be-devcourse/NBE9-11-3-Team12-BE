@@ -1,0 +1,54 @@
+package com.rungo.api.domain.users.organizerApproval.entity
+
+import com.rungo.api.domain.users.entity.Users
+import com.rungo.api.domain.users.organizerApproval.status.ApproveStatus
+import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.LocalDateTime
+
+@Entity
+@Table(name = "organizer_approvals")
+@EntityListeners(AuditingEntityListener::class)
+class OrganizerApproval protected constructor() {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0L
+        protected set
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    lateinit var user: Users
+        protected set
+
+    @Column(nullable = false, length = 100)
+    lateinit var businessRegistrationNumber: String
+        protected set
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    lateinit var status: ApproveStatus
+        protected set
+
+    @Column(length = 500)
+    var rejectReason: String? = null
+        protected set
+
+    @CreatedDate
+    @Column(nullable = false)
+    lateinit var requestedAt: LocalDateTime
+        protected set
+
+    companion object {
+        fun create(
+            user: Users,
+            businessRegistrationNumber: String,
+        ): OrganizerApproval =
+            OrganizerApproval().apply {
+                this.user = user
+                this.businessRegistrationNumber = businessRegistrationNumber
+                this.status = ApproveStatus.PENDING
+            }
+    }
+}
