@@ -54,8 +54,9 @@ class MarathonService(
     fun createMarathon(id: Long, req: CreateMarathonReq): CreateMarathonRes {
         val organizer = findOrganizer(id)
 
-        val posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage)
-
+        val posterImageUrl = req.posterImage?.let {
+            fileStorageService.saveMarathonPoster(it)
+        }
 
         validateMarathonSchedule(
             req.registrationStartAt,
@@ -221,7 +222,7 @@ class MarathonService(
                 ?: throw CustomException(ErrorCode.COURSE_NOT_FOUND)
 
             course.updateCourseInfo(
-                courseReq.courseType,
+                courseReq.courseType?.let(::normalizeCourseType),
                 courseReq.price,
                 courseReq.capacity,
             )

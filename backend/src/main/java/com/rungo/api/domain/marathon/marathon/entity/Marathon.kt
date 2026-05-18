@@ -81,9 +81,7 @@ class Marathon protected constructor() {
     )
     val courses: MutableList<Course> = mutableListOf()
 
-    fun isOpen(): Boolean {
-        return status == MarathonStatus.OPEN
-    }
+    fun isOpen(): Boolean = status == MarathonStatus.OPEN
 
     fun isCanceled(): Boolean {
         return status == MarathonStatus.CANCELING ||
@@ -142,13 +140,13 @@ class Marathon protected constructor() {
         registrationStartAt: LocalDateTime?,
         registrationEndAt: LocalDateTime?
     ) {
-        if (title != null) this.title = title
-        if (region != null) this.region = region
-        if (detailedAddress != null) this.detailedAddress = detailedAddress
-        if (eventDate != null) this.eventDate = eventDate
-        if (posterImageUrl != null) this.posterImageUrl = posterImageUrl
-        if (registrationStartAt != null) this.registrationStartAt = registrationStartAt
-        if (registrationEndAt != null) this.registrationEndAt = registrationEndAt
+        title?.let { this.title = it }
+        region?.let { this.region = it }
+        detailedAddress?.let { this.detailedAddress = it }
+        eventDate?.let { this.eventDate = it }
+        posterImageUrl?.let { this.posterImageUrl = it }
+        registrationStartAt?.let { this.registrationStartAt = it }
+        registrationEndAt?.let { this.registrationEndAt = it }
     }
 
     companion object {

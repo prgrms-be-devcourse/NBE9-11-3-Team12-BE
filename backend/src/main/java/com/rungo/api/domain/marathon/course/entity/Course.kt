@@ -46,26 +46,24 @@ class Course protected constructor() {
         }
     }
 
-    fun isFull(): Boolean {
-        return currentCount >= capacity
-    }
+    fun isFull(): Boolean = currentCount >= capacity
+
 
     fun resetCurrentCount() {
         currentCount = 0
     }
 
-    fun getRemainingCount(): Int {
-        return capacity - currentCount
-    }
+    fun getRemainingCount(): Int = capacity - currentCount
+
 
     fun updateCourseInfo(
         courseType: String?,
         price: BigDecimal?,
         capacity: Int?
     ) {
-        if (courseType != null) this.courseType = courseType
-        if (price != null) this.price = price
-        if (capacity != null) this.capacity = capacity
+        courseType?.let { this.courseType = courseType}
+        price?.let {this.price = price}
+        capacity?.let {this.capacity = capacity}
     }
 
     companion object {
