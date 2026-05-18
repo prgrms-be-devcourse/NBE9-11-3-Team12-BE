@@ -114,23 +114,13 @@ class Marathon protected constructor() {
     fun getRecruitmentStatus(): RecruitmentStatus {
         val now = LocalDateTime.now()
 
-        if (isCanceled()) {
-            return RecruitmentStatus.CANCELED
+        return when {
+            isCanceled() -> RecruitmentStatus.CANCELED
+            now.isBefore(registrationStartAt) -> RecruitmentStatus.TEMP
+            now.isAfter(registrationEndAt) -> RecruitmentStatus.CLOSED
+            isAllCoursesFull() -> RecruitmentStatus.FULL
+            else -> RecruitmentStatus.OPEN
         }
-
-        if (now.isBefore(registrationStartAt)) {
-            return RecruitmentStatus.TEMP
-        }
-
-        if (now.isAfter(registrationEndAt)) {
-            return RecruitmentStatus.CLOSED
-        }
-
-        if (isAllCoursesFull()) {
-            return RecruitmentStatus.FULL
-        }
-
-        return RecruitmentStatus.OPEN
     }
 
     fun updateMarathonInfo(
