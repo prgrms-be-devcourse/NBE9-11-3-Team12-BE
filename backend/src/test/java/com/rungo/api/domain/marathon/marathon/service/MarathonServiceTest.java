@@ -708,7 +708,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
         given(fileStorageService.saveMarathonPoster(any())).willReturn("updated-poster.png");
 
         UpdateMarathonRes result =
@@ -750,7 +750,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.empty());
+                .willReturn(null);
 
         CustomException exception = assertThrows(
                 CustomException.class,
@@ -791,7 +791,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
 
         CustomException exception = assertThrows(
                 CustomException.class,
@@ -821,7 +821,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
 
         CustomException exception = assertThrows(
                 CustomException.class,
@@ -851,7 +851,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
 
         CustomException exception = assertThrows(
                 CustomException.class,
@@ -881,7 +881,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
 
         CustomException exception = assertThrows(
                 CustomException.class,
@@ -924,7 +924,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
 
         CustomException exception = assertThrows(
                 CustomException.class,
@@ -961,7 +961,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
 
         CustomException exception = assertThrows(
                 CustomException.class,
@@ -1004,7 +1004,7 @@ class MarathonServiceTest {
         );
 
         given(marathonRepository.findByIdAndOrganizer_Id(10L, organizerId))
-                .willReturn(Optional.of(marathon));
+                .willReturn(marathon);
 
         CustomException exception = assertThrows(
                 CustomException.class,

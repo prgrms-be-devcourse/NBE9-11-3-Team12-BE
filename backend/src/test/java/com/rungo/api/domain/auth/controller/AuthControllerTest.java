@@ -176,7 +176,7 @@ class AuthControllerTest {
                 .willThrow(new CustomException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
 
         mockMvc.perform(post("/api/v1/auth/reissue"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
