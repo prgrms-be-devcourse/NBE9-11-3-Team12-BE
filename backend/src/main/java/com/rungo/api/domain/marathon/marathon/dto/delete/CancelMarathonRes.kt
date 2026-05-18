@@ -26,7 +26,7 @@ data class CancelMarathonRes(
 
     @field:Schema(description = "코스 목록")
     @JvmField
-    val courses: List<CancelCourseItemRes>?
+    val courses: List<CancelCourseItemRes>
 ) {
     companion object {
         @JvmStatic
