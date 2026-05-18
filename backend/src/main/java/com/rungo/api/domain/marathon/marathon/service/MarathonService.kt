@@ -82,7 +82,7 @@ class MarathonService(
 
         req.courses.forEach { courseReq ->
             marathon.addCourse(
-                Course(
+                Course.create(
                     normalizeCourseType(courseReq.courseType),
                     courseReq.price,
                     courseReq.capacity,
@@ -345,7 +345,7 @@ class MarathonService(
 
     private fun activateIfStarted(marathon: Marathon) {
         if (marathon.status == MarathonStatus.TEMP
-            && !LocalDateTime.now().isBefore(marathon.getRegistrationStartAt())
+            && !LocalDateTime.now().isBefore(marathon.registrationStartAt)
         ) {
             marathon.open()
         }
