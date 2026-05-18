@@ -40,7 +40,7 @@ class AuthService(
 
     @Transactional
     fun signup(req: SignUpReq): SignUpRes {
-        if (userRepository.findByEmail(req.email).isPresent) {
+        if (userRepository.findByEmail(req.email) != null) {
             throw CustomException(ErrorCode.DUPLICATE_EMAIL)
         }
 
@@ -166,7 +166,7 @@ class AuthService(
     }
 
     fun getMe(email: String): MeRes {
-        val user = userRepository.findByEmail(email).orElse(null)
+        val user = userRepository.findByEmail(email)
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
         return MeRes.from(user)

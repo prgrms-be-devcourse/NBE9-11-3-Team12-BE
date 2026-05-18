@@ -53,7 +53,7 @@ class DataInitializer(
 
     private fun initOrganizer(): Users =
         userRepository.findByEmail("organizer@test.com")
-            .orElseGet {
+            ?: run {
 
                 val savedUser = Users.create(
                     email = "organizer@test.com",
@@ -210,11 +210,10 @@ class DataInitializer(
             val participantIndex = index + 1
             val participant = userRepository
                 .findByEmail("user$participantIndex@test.com")
-                .orElseThrow {
-                    IllegalStateException(
+                ?: throw IllegalStateException(
                         "취소 테스트용 참가자 없음: user$participantIndex@test.com"
                     )
-                }
+
             val course = marathon.courses[0]
 
             Registration.create(

@@ -18,7 +18,7 @@ class UserAuth protected constructor() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    var id: Long = 0L
         protected set
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -90,7 +90,7 @@ class RegistrationCancelHistory protected constructor() {
             cancelReason: RegistrationCancelReason = RegistrationCancelReason.USER_CANCELED
         ): RegistrationCancelHistory = RegistrationCancelHistory().apply {
             this.originalRegistrationId = registration.id
-            this.userId = registration.user.id!!
+            this.userId = registration.user.id
             this.marathonId = registration.marathon.id
             this.courseId = registration.course.id
             this.snapName = registration.snapName

@@ -41,7 +41,7 @@ class CustomOAuth2UserService(
         val user = if (userAuth != null) {
             userAuth.user
         } else {
-            val existingUser = userRepository.findByEmail(email).orElse(null)
+            val existingUser = userRepository.findByEmail(email)
                 ?: userRepository.save(
                     Users.createOAuth(
                         email = email,
