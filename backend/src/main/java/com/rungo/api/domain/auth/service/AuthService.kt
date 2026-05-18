@@ -72,7 +72,7 @@ class AuthService(
 
     @Transactional
     fun login(req: LoginReq): LoginResult {
-        val userAuth = userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL).orElse(null)
+        val userAuth = userAuthRepository.findByUser_EmailAndProvider(req.email, Provider.LOCAL)
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
         if (userAuth.password == null ||
