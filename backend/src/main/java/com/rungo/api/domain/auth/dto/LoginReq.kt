@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
-@JvmRecord
 @Schema(description = "로그인 요청 DTO")
 data class LoginReq(
         @field:Schema(description = "이메일", example = "test@example.com")

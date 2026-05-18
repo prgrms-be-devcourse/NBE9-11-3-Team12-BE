@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.*
 import java.time.LocalDate
 
-@JvmRecord
 @Schema(description = "회원가입 요청 DTO")
 data class SignUpReq(
     @field:Schema(description = "이메일", example = "test@example.com")

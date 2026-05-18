@@ -2,7 +2,6 @@ package com.rungo.api.domain.auth.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@JvmRecord
 @Schema(description = "로그인 처리 결과 DTO")
 data class LoginResult(
         @field:Schema(description = "Access Token")

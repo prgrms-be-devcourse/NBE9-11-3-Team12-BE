@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-@JvmRecord
 @Schema(description = "회원가입 응답 DTO")
 data class SignUpRes(
         @field:Schema(description = "사용자 ID", example = "1")

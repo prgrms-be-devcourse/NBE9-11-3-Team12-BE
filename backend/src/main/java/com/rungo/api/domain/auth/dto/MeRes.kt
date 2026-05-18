@@ -4,7 +4,6 @@ import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Role
 import io.swagger.v3.oas.annotations.media.Schema
 
-@JvmRecord
 @Schema(description = "로그인 사용자 정보 응답 DTO")
 data class MeRes(
     @field:Schema(description = "사용자 ID", example = "1")
