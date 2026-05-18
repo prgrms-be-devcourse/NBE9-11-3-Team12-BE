@@ -34,14 +34,11 @@ class NotificationIntegrationTest {
             courseName = "10km"
         )
 
-        // 트랜잭션 내에서 이벤트 발행 (롤백 대기 상태)
         eventPublisher.publishEvent(event)
 
-        // 테스트 트랜잭션 강제 커밋 후 종료 -> 리스너 작동
         TestTransaction.flagForCommit()
         TestTransaction.end()
 
-        // 커밋 완료, 비동기 스레드에서 메일 발송이 일어났는지 최대 2초 기다리며 검증
         verify(emailService, timeout(2000).times(1))
             .send(anyEmailMessage())
     }
@@ -63,7 +60,6 @@ class NotificationIntegrationTest {
 
         Thread.sleep(1000)
 
-        // 한 번도 호출되지 않았음을 검증
         verify(emailService, never())
             .send(anyEmailMessage())
     }
