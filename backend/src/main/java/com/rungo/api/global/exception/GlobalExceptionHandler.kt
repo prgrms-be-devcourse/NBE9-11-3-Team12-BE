@@ -1,10 +1,13 @@
 package com.rungo.api.global.exception
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.module.kotlin.KotlinInvalidNullException
 import com.rungo.api.global.response.ApiResponse
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -81,7 +84,26 @@ class GlobalExceptionHandler {
             .body(ApiResponse.error(ec.status, ec.name, ec.message, errors))
     }
 
-    // 4. DB 유니크 제약 예외 처리
+    // 4. 요청 바디를 DTO로 바꾸는 단계에서 실패한 경우 처리
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleHttpMessageNotReadableException(
+        e: HttpMessageNotReadableException
+    ): ResponseEntity<ApiResponse<Void?>> {
+        log.warn("HttpMessageNotReadableException 발생: {}", e.message)
+
+        val ec = ErrorCode.INVALID_INPUT_VALUE
+
+        val message = when (e.cause) {
+            is KotlinInvalidNullException -> "필수 입력값이 누락되었습니다."
+            is InvalidFormatException -> "입력값 형식이 올바르지 않습니다."
+            else -> "요청 형식이 올바르지 않습니다."
+        }
+
+        return ResponseEntity.status(ec.status)
+            .body(ApiResponse.error(ec.status, ec.name, message))
+    }
+
+    // 5. DB 유니크 제약조건 위반 처리
     @ExceptionHandler(DataIntegrityViolationException::class)
     fun handleDataIntegrityViolationException(
         e: DataIntegrityViolationException
@@ -117,7 +139,7 @@ class GlobalExceptionHandler {
             .body(ApiResponse.error(ec.status, ec.name, ec.message))
     }
 
-    // 5. 시스템 예외 처리
+    // 6. 시스템 예외 처리
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception): ResponseEntity<ApiResponse<Void?>> {
         log.error("Internal Server Error: ", e)
