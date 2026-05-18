@@ -61,6 +61,6 @@ object JwtUtil {
             .payload
 
     // 사용자 ID 추출
-    fun getUserId(token: String, secret: String, ): Long? =
+    fun getUserId(token: String, secret: String): Long? =
         runCatching { (getClaims(token, secret)["id"] as Number).toLong() }.getOrNull()
 }
