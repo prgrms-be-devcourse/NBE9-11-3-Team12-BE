@@ -10,7 +10,7 @@ interface CourseRepository : JpaRepository<Course, Long> {
 
     fun findAllByMarathon_IdOrderByIdAsc(marathonId: Long): List<Course>
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying
     @Query(
         """
         update Course c
@@ -23,7 +23,7 @@ interface CourseRepository : JpaRepository<Course, Long> {
         @Param("courseId") courseId: Long,
     ): Int
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying
     @Query(
         """
         update Course c
