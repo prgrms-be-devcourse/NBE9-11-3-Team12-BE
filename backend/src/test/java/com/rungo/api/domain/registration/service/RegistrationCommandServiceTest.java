@@ -278,6 +278,7 @@ class RegistrationCommandServiceTest {
                 LocalDateTime.now().plusDays(1),
                 MarathonStatus.OPEN
         );
+        ReflectionTestUtils.setField(marathon, "id", 2L);
         Course course = createCourse(marathon, 100, 10);
         ReflectionTestUtils.setField(course, "id", 3L);
         Registration registration = Registration.create(
@@ -290,6 +291,8 @@ class RegistrationCommandServiceTest {
                 "L",
                 true
         );
+        ReflectionTestUtils.setField(registration, "id", 1L);
+        ReflectionTestUtils.setField(registration, "appliedAt", LocalDateTime.of(2026, 4, 15, 10, 0));
 
         given(registrationRepository.findById(1L)).willReturn(Optional.of(registration));
 
