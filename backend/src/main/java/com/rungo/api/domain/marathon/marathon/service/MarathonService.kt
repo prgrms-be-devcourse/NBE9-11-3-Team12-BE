@@ -197,8 +197,9 @@ class MarathonService(
             eventDate
         )
 
-        val posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage)
-
+        val posterImageUrl = req.posterImage?.let {
+            fileStorageService.saveMarathonPoster(it)
+        }
         //기존에 있는 Course를 Map으로 저장
         val courseMap = toCourseMap(marathon)
 
