@@ -13,11 +13,9 @@ import java.time.LocalDateTime
 data class MarathonListRes(
 
     @field:Schema(description = "마라톤 목록")
-    @JvmField
     val content: List<Item>?,
 
     @field:Schema(description = "페이지 정보")
-    @JvmField
     val pageRes: PageRes?
 ) {
 
@@ -65,51 +63,39 @@ data class MarathonListRes(
     data class Item(
 
         @field:Schema(description = "마라톤 ID", example = "1")
-        @JvmField
         val id: Long,
 
         @field:Schema(description = "대회명", example = "2026 서울 마라톤")
-        @JvmField
         val title: String,
 
         @field:Schema(description = "지역", example = "서울")
-        @JvmField
         val region: String,
 
         @field:Schema(description = "상세주소", example = "서울특별시 송파구 올림픽로 424")
-        @JvmField
         val detailedAddress: String?,
 
         @field:Schema(description = "대회 일자", example = "2020-02-02")
-        @JvmField
         val eventDate: LocalDate,
 
         @field:Schema(description = "포스터 이미지 URL", example = "https://example.com/poster.png")
-        @JvmField
         val posterImageUrl: String?,
 
         @field:Schema(description = "접수 시작 일시", example = "2020-02-02T02:02:02")
-        @JvmField
         val registrationStartAt: LocalDateTime,
 
         @field:Schema(description = "접수 종료 일시", example = "2020-02-02T02:02:02")
-        @JvmField
         val registrationEndAt: LocalDateTime,
 
         @field:Schema(description = "마라톤 상태", example = "OPEN")
-        @JvmField
         val status: MarathonStatus,
 
         @field:Schema(description = "전체 정원", example = "500")
-        @JvmField
         val totalCapacity: Int,
 
         @field:Schema(description = "전체 접수 인원", example = "180")
-        @JvmField
         val totalCurrentCount: Int,
 
         @field:Schema(description = "모집 상태", example = "OPEN")
-        @JvmField
         val recruitmentStatus: RecruitmentStatus
     ) {
 
