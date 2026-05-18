@@ -174,7 +174,7 @@ class MarathonService(
     @Transactional
     fun updateMarathon(organizerId: Long, marathonId: Long, req: UpdateMarathonReq): UpdateMarathonRes {
         val marathon = marathonRepository.findByIdAndOrganizer_Id(marathonId, organizerId)
-            .orElseThrow { CustomException(ErrorCode.MARATHON_NOT_FOUND) }
+            ?: throw  CustomException(ErrorCode.MARATHON_NOT_FOUND)
 
         //마라톤 접수 전까지만 수정 가능하도록 예외 처리
         if (!LocalDateTime.now().isBefore(marathon.registrationStartAt)) {
