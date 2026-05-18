@@ -50,7 +50,7 @@ class UsersController(
         @AuthenticationPrincipal user: SecurityUser,
         @Valid @RequestBody req: UpdateMyProfileReq
     ): ResponseEntity<ApiResponse<UpdateMyProfileRes>> {
-        if (req.name == null && req.phoneNumber == null && req.gender == null && req.birth == null) {
+        if (req.name == null && req.phoneNumber == null) {
             throw CustomException(ErrorCode.INVALID_INPUT_VALUE)
         }
         return ResponseEntity.ok(ApiResponse.ok(userService.updateMyProfile(user.getId(), req)))

@@ -18,13 +18,13 @@ data class MyProfileRes(
     val name: String,
 
     @field:Schema(description = "전화번호", example = "010-1234-5678")
-    val phoneNumber: String,
+    val phoneNumber: String?,
 
     @field:Schema(description = "성별", example="MALE")
-    val gender: Gender,
+    val gender: Gender?,
 
     @field:Schema(description = "생년월일", example = "1990-01-01")
-    val birth: LocalDate,
+    val birth: LocalDate?,
 
     @field:Schema(description = "사용자 역할", example = "USER")
     val role: Role

@@ -21,7 +21,7 @@ class UsersService(
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
         return MyProfileRes(
-            user.id,
+            user.id!!,
             user.email,
             user.name,
             user.phoneNumber,
@@ -36,21 +36,11 @@ class UsersService(
         val user = userRepository.findByIdOrNull(userId)
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
-        user.updateProfile(
-            req.name ?: user.name,
-            req.phoneNumber ?: user.phoneNumber,
-            req.gender ?: user.gender,
-            req.birth ?: user.birth,
-        )
+        user.updateProfile(req.name, req.phoneNumber)
 
         return UpdateMyProfileRes(
-            user.id,
-            user.email,
             user.name,
             user.phoneNumber,
-            user.gender,
-            user.birth,
-            user.role
         )
     }
 
@@ -59,11 +49,6 @@ class UsersService(
         val user = userRepository.findByIdOrNull(userId)
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
-        user.updateProfile(
-            req.name,
-            req.phoneNumber,
-            req.gender,
-            req.birth
-        )
+        user.completeProfile(req.name, req.phoneNumber, req.gender, req.birth)
     }
 }
