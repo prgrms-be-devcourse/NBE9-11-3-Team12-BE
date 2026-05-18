@@ -5,7 +5,6 @@ import com.rungo.api.domain.auth.entity.UserAuth
 import com.rungo.api.domain.auth.repository.UserAuthRepository
 import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Provider
-import com.rungo.api.domain.users.enumtype.Role
 import com.rungo.api.domain.users.repository.UserRepository
 import com.rungo.api.global.exception.CustomException
 import com.rungo.api.global.exception.ErrorCode
@@ -45,14 +44,13 @@ class AuthService(
             throw CustomException(ErrorCode.DUPLICATE_EMAIL)
         }
 
-        val user = Users.builder()
-            .email(req.email)
-            .name(req.name)
-            .phoneNumber(req.phoneNumber)
-            .gender(req.gender)
-            .birth(req.birth)
-            .role(Role.PARTICIPANT) // PARTICIPANT 고정
-            .build()
+        val user = Users.create(
+            email = req.email,
+            name = req.name,
+            phoneNumber = req.phoneNumber,
+            gender = req.gender,
+            birth = req.birth,
+        )
 
         val savedUser = userRepository.save(user)
 
@@ -60,20 +58,15 @@ class AuthService(
             UserAuth.createLocalAuth(savedUser, passwordEncoder.encode(req.password))
         )
 
-        val userId = savedUser.id
-            ?: throw CustomException(ErrorCode.INTERNAL_SERVER_ERROR)
-
-        val createdAt = savedUser.createdAt
-
         return SignUpRes(
-            userId,
-            savedUser.email,
-            savedUser.name,
-            savedUser.phoneNumber,
-            savedUser.gender,
-            savedUser.birth,
-            savedUser.role,
-            createdAt
+            id = savedUser.id,
+            email = savedUser.email,
+            name = savedUser.name,
+            phoneNumber = req.phoneNumber,
+            gender = req.gender,
+            birth = req.birth,
+            role = savedUser.role,
+            createdAt = savedUser.createdAt,
         )
     }
 
@@ -91,7 +84,6 @@ class AuthService(
         val user = userAuth.user
 
         val userId = user.id
-            ?: throw CustomException(ErrorCode.INTERNAL_SERVER_ERROR)
 
         val accessToken = JwtUtil.generateAccessToken(
             userId,
