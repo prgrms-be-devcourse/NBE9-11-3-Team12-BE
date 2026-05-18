@@ -36,7 +36,7 @@ class CustomOAuth2UserService(
             ?.takeIf { it.isNotBlank() }
             ?: email.substringBefore("@")
 
-        val userAuth = userAuthRepository.findByProviderAndProviderId(Provider.GOOGLE, providerId).orElse(null)
+        val userAuth = userAuthRepository.findByProviderAndProviderId(Provider.GOOGLE, providerId)
 
         val user = if (userAuth != null) {
             userAuth.user
