@@ -159,7 +159,7 @@ class Marathon protected constructor() {
             region: String,
             detailedAddress: String,
             eventDate: LocalDate,
-            posterImageUrl: String?,
+            posterImageUrl: String,
             registrationStartAt: LocalDateTime,
             registrationEndAt: LocalDateTime
         ): Marathon {
