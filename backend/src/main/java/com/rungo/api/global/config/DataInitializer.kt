@@ -5,7 +5,6 @@ import com.rungo.api.domain.auth.repository.UserAuthRepository
 import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.course.repository.CourseRepository
 import com.rungo.api.domain.marathon.marathon.entity.Marathon
-import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
 import com.rungo.api.domain.registration.entity.Registration
 import com.rungo.api.domain.registration.repository.RegistrationRepository
@@ -139,25 +138,24 @@ class DataInitializer(
 
         if (exists) return
 
-        val marathon = Marathon(
-            organizer,
-            "테스트용 마라톤",
-            "서울",
-            "성동구",
-            LocalDate.now().plusDays(30),
-            "poster.png",
-            LocalDateTime.now().minusDays(1),
-            LocalDateTime.now().plusDays(10),
-            MarathonStatus.OPEN,
+        val marathon = Marathon.create(
+            organizer = organizer,
+            title = "테스트용 마라톤",
+            region = "서울",
+            detailedAddress = "성동구",
+            eventDate = LocalDate.now().plusDays(30),
+            posterImageUrl = "poster.png",
+            registrationStartAt = LocalDateTime.now().minusDays(1),
+            registrationEndAt = LocalDateTime.now().plusDays(10),
         )
 
         val savedMarathon = marathonRepository.save(marathon)
 
-        val course = Course(
-            "10K",
-            BigDecimal.valueOf(30000),
-            40000,
-            0,
+        val course = Course.create(
+            courseType = "10K",
+            price = BigDecimal.valueOf(30000),
+            capacity = 40000,
+            currentCount = 0,
         )
 
         savedMarathon.addCourse(course)
@@ -179,16 +177,15 @@ class DataInitializer(
             val marathonTitle = "취소테스트 마라톤 $i"
             if (marathonTitle in existingTitles) continue
 
-            marathonsToSave += Marathon(
-                organizer,
-                marathonTitle,
-                "서울",
-                "성동구",
-                LocalDate.now().plusDays(30),
-                "poster.png",
-                LocalDateTime.now().minusDays(1),
-                LocalDateTime.now().plusDays(10),
-                MarathonStatus.OPEN,
+            marathonsToSave += Marathon.create(
+                organizer = organizer,
+                title = marathonTitle,
+                region = "서울",
+                detailedAddress = "성동구",
+                eventDate = LocalDate.now().plusDays(30),
+                posterImageUrl = "poster.png",
+                registrationStartAt = LocalDateTime.now().minusDays(1),
+                registrationEndAt = LocalDateTime.now().plusDays(10),
             )
         }
 
@@ -197,11 +194,11 @@ class DataInitializer(
         val savedMarathons = marathonRepository.saveAll(marathonsToSave)
         val courses = savedMarathons.map { marathon ->
 
-            Course(
-                "10K",
-                BigDecimal.valueOf(30000),
-                40000,
-                0,
+            Course.create(
+                courseType = "10K",
+                price = BigDecimal.valueOf(30000),
+                capacity = 40000,
+                currentCount = 0,
             ).also {
                 marathon.addCourse(it)
             }
