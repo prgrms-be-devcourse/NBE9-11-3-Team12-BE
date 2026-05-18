@@ -4,6 +4,8 @@ import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import com.rungo.api.domain.users.entity.Users
+import com.rungo.api.global.exception.CustomException
+import com.rungo.api.global.exception.ErrorCode
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
@@ -98,6 +100,7 @@ class Registration protected constructor() {
             this.status = RegistrationStatus.COMPLETED
             this.snapName = user.name
             this.snapPhoneNumber = user.phoneNumber
+                ?: throw CustomException(ErrorCode.PROFILE_NOT_COMPLETED)
             this.snapZipCode = snapZipCode
             this.snapAddress = snapAddress
             this.snapDetail = snapDetail

@@ -16,7 +16,7 @@ class Users protected constructor() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    var id: Long = 0L
         protected set
 
     @Column(nullable = false, unique = true, length = 100)
@@ -75,44 +75,31 @@ class Users protected constructor() {
         get() = phoneNumber != null && gender != null && birth != null
 
     companion object {
-        @JvmStatic
-        fun create(
+
+        // 소셜 로그인 가입
+        fun createOAuth(
             email: String,
             name: String,
-            role: Role,
         ): Users = Users().apply {
             this.email = email
             this.name = name
-            this.role = role
+            this.role = Role.PARTICIPANT
         }
 
-        // java용 임시 빌더 추가 //
-        @JvmStatic
-        fun builder() = Builder()
-    }
-
-    class Builder {
-        private var email: String = ""
-        private var name: String = ""
-        private var phoneNumber: String? = null
-        private var role: Role = Role.PARTICIPANT
-        private var gender: Gender? = null
-        private var birth: LocalDate? = null
-
-        fun email(email: String) = apply { this.email = email }
-        fun name(name: String) = apply { this.name = name }
-        fun phoneNumber(phoneNumber: String?) = apply { this.phoneNumber = phoneNumber }
-        fun role(role: Role) = apply { this.role = role }
-        fun gender(gender: Gender?) = apply { this.gender = gender }
-        fun birth(birth: LocalDate?) = apply { this.birth = birth }
-
-        fun build() = Users().apply {
-            this.email = this@Builder.email
-            this.name = this@Builder.name
-            this.phoneNumber = this@Builder.phoneNumber
-            this.role = this@Builder.role
-            this.gender = this@Builder.gender
-            this.birth = this@Builder.birth
+        // 자체 회원가입
+        fun create(
+            email: String,
+            name: String,
+            phoneNumber: String,
+            gender: Gender,
+            birth: LocalDate,
+        ): Users = Users().apply {
+            this.email = email
+            this.name = name
+            this.phoneNumber = phoneNumber
+            this.role = Role.PARTICIPANT
+            this.gender = gender
+            this.birth = birth
         }
     }
 }

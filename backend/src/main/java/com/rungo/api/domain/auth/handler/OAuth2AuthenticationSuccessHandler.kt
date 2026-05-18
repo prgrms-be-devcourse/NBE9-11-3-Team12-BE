@@ -46,10 +46,6 @@ class OAuth2AuthenticationSuccessHandler(
         }
 
         val userId = user.id
-        if (userId == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User id not found")
-            return
-        }
 
         val accessToken = JwtUtil.generateAccessToken(
             userId,

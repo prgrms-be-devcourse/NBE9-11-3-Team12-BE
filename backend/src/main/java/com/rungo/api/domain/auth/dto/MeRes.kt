@@ -14,7 +14,7 @@ data class MeRes(
     companion object {
         @JvmStatic
         fun from(user: Users): MeRes = MeRes(
-            id = user.id!!,
+            id = user.id,
             email = user.email,
             name = user.name,
             role = user.role,

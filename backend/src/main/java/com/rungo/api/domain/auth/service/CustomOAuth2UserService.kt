@@ -4,7 +4,6 @@ import com.rungo.api.domain.auth.entity.UserAuth
 import com.rungo.api.domain.auth.repository.UserAuthRepository
 import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Provider
-import com.rungo.api.domain.users.enumtype.Role
 import com.rungo.api.domain.users.repository.UserRepository
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
@@ -44,11 +43,10 @@ class CustomOAuth2UserService(
         } else {
             val existingUser = userRepository.findByEmail(email).orElse(null)
                 ?: userRepository.save(
-                    Users.builder()
-                        .email(email)
-                        .name(name)
-                        .role(Role.PARTICIPANT)
-                        .build()
+                    Users.createOAuth(
+                        email = email,
+                        name = name,
+                    )
                 )
 
             if (!userAuthRepository.existsByUserAndProvider(existingUser, Provider.GOOGLE)) {

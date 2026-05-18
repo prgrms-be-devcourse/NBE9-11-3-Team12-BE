@@ -21,7 +21,7 @@ class UsersService(
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
         return MyProfileRes(
-            user.id!!,
+            user.id,
             user.email,
             user.name,
             user.phoneNumber,
