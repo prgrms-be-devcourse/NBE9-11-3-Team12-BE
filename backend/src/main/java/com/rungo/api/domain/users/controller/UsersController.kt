@@ -53,7 +53,7 @@ class UsersController(
         if (req.name == null && req.phoneNumber == null) {
             throw CustomException(ErrorCode.INVALID_INPUT_VALUE)
         }
-        return ResponseEntity.ok(ApiResponse.ok(userService.updateMyProfile(user.getId(), req)))
+        return ResponseEntity.ok(ApiResponse.ok(userService.updateMyProfile(user.id, req)))
     }
 
     @PatchMapping("/me/complete")
