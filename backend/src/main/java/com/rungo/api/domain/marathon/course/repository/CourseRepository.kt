@@ -8,14 +8,9 @@ import org.springframework.data.repository.query.Param
 
 interface CourseRepository : JpaRepository<Course, Long> {
 
-    fun findAllByMarathon_IdOrderByIdAsc(
-        marathonId: Long
-    ): List<Course>
+    fun findAllByMarathon_IdOrderByIdAsc(marathonId: Long): List<Course>
 
-    @Modifying(
-        clearAutomatically = true,
-        flushAutomatically = true
-    )
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         update Course c
@@ -25,14 +20,10 @@ interface CourseRepository : JpaRepository<Course, Long> {
         """
     )
     fun increaseCurrentCountIfNotFull(
-        @Param("courseId")
-        courseId: Long
+        @Param("courseId") courseId: Long,
     ): Int
 
-    @Modifying(
-        clearAutomatically = true,
-        flushAutomatically = true
-    )
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         """
         update Course c
@@ -42,7 +33,6 @@ interface CourseRepository : JpaRepository<Course, Long> {
         """
     )
     fun decreaseCurrentCountIfPositive(
-        @Param("courseId")
-        courseId: Long
+        @Param("courseId") courseId: Long,
     ): Int
 }
