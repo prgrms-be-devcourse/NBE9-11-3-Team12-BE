@@ -33,7 +33,7 @@ data class MarathonDetailRes(
 
     @field:Schema(description = "포스터 이미지 URL", example = "https://example.com/poster.png")
     @JvmField
-    val posterImageUrl: String?,
+    val posterImageUrl: String,
 
     @field:Schema(description = "접수 시작 일시", example = "2020-02-02T02:02:02")
     @JvmField

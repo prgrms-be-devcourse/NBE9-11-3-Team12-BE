@@ -54,9 +54,7 @@ class MarathonService(
     fun createMarathon(id: Long, req: CreateMarathonReq): CreateMarathonRes {
         val organizer = findOrganizer(id)
 
-        val posterImageUrl = req.posterImage?.let {
-            fileStorageService.saveMarathonPoster(it)
-        }
+        val posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage)
 
         validateMarathonSchedule(
             req.registrationStartAt,

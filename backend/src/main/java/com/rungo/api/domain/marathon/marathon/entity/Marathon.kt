@@ -52,7 +52,7 @@ class Marathon protected constructor() {
         protected set
 
     @Column(length = 500)
-    var posterImageUrl: String? = null
+    lateinit var posterImageUrl: String
         protected set
 
     @CreatedDate
@@ -94,7 +94,6 @@ class Marathon protected constructor() {
         _courses.add(course)
         course.assignMarathon(this)
     }
-
     fun cancel() {
         if (isCanceled()) {
             throw CustomException(ErrorCode.MARATHON_ALREADY_CANCELED)
