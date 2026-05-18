@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import lombok.RequiredArgsConstructor
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 
 @RestController
-@RequiredArgsConstructor
 @Validated
 @RequestMapping("/api/v1/admin")
 @Tag(name = "Admin", description = "관리자 API")
@@ -36,12 +34,12 @@ class AdminController(
         SwaggerResponse(responseCode = "401", description = "인증 필요"),
         SwaggerResponse(responseCode = "403", description = "관리자 권한 필요"),
         SwaggerResponse(responseCode = "404", description = "사용자 없음"),
-        SwaggerResponse(responseCode = "400", description = "이미 주최자 권한 보유")
+        SwaggerResponse(responseCode = "400", description = "이미 주최자 권한 보유"),
     )
     fun approveOrganizer(
 
         @AuthenticationPrincipal admin: SecurityUser,
-        @PathVariable userId:  Long
+        @PathVariable userId: Long
 
     ): ResponseEntity<ApiResponse<AdminApproveRes>> {
         val adminApproveRes = adminService.approveOrganizer(admin.id, userId)
