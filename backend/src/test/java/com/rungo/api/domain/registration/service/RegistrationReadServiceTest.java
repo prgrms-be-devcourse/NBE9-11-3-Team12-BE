@@ -3,7 +3,6 @@ package com.rungo.api.domain.registration.service;
 import com.rungo.api.domain.marathon.course.entity.Course;
 import com.rungo.api.domain.marathon.course.repository.CourseRepository;
 import com.rungo.api.domain.marathon.marathon.entity.Marathon;
-import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.registration.dto.MyRegistrationRes;
 import com.rungo.api.domain.registration.entity.Registration;
@@ -13,7 +12,6 @@ import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRep
 import com.rungo.api.domain.registration.repository.RegistrationRepository;
 import com.rungo.api.domain.users.entity.Users;
 import com.rungo.api.domain.users.enumtype.Gender;
-import com.rungo.api.domain.users.enumtype.Role;
 import com.rungo.api.domain.users.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -231,20 +229,20 @@ class RegistrationReadServiceTest {
     }
 
     private Users createUser(Long id, String name, String phoneNumber) {
-        Users user = Users.builder()
-                .email("test@test.com")
-                .name(name)
-                .phoneNumber(phoneNumber)
-                .role(Role.PARTICIPANT)
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(1999, 1, 1))
-                .build();
+        Users user = Users.create(
+                "test@test.com",
+                name,
+                phoneNumber,
+                Gender.MALE,
+                LocalDate.of(1999, 1, 1)
+        );
+
         ReflectionTestUtils.setField(user, "id", id);
         return user;
     }
 
     private Marathon createMarathon() {
-        return new Marathon(
+        return Marathon.create(
                 createUser(99L, "주최자", "010-9999-9999"),
                 "서울 마라톤",
                 "서울",
@@ -252,14 +250,13 @@ class RegistrationReadServiceTest {
                 LocalDate.of(2026, 10, 25),
                 "poster.png",
                 LocalDateTime.of(2026, 4, 1, 0, 0),
-                LocalDateTime.of(2026, 9, 30, 23, 59),
-                MarathonStatus.OPEN
+                LocalDateTime.of(2026, 9, 30, 23, 59)
         );
     }
 
     private Course createCourse(Marathon marathon, String courseType, int price, int capacity, int currentCount) {
-        Course course = new Course(courseType, BigDecimal.valueOf(price), capacity, currentCount);
-        course.setMarathon(marathon);
+        Course course = Course.create(courseType, BigDecimal.valueOf(price), capacity, currentCount);
+        marathon.addCourse(course);
         return course;
     }
 }

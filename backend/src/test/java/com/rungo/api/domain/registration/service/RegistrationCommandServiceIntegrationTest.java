@@ -1,18 +1,16 @@
 package com.rungo.api.domain.registration.service;
 
+import com.rungo.api.domain.auth.repository.UserAuthRepository;
 import com.rungo.api.domain.marathon.course.entity.Course;
 import com.rungo.api.domain.marathon.course.repository.CourseRepository;
 import com.rungo.api.domain.marathon.marathon.entity.Marathon;
-import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq;
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes;
 import com.rungo.api.domain.registration.entity.Registration;
 import com.rungo.api.domain.registration.repository.RegistrationRepository;
-import com.rungo.api.domain.auth.repository.UserAuthRepository;
 import com.rungo.api.domain.users.entity.Users;
 import com.rungo.api.domain.users.enumtype.Gender;
-import com.rungo.api.domain.users.enumtype.Role;
 import com.rungo.api.domain.users.repository.UserRepository;
 import com.rungo.api.global.infrastructure.mail.EmailMessage;
 import com.rungo.api.global.infrastructure.mail.EmailService;
@@ -168,28 +166,28 @@ class RegistrationCommandServiceIntegrationTest {
     }
 
     private Users saveOrganizer(String email) {
-        return userRepository.save(
-                Users.builder()
-                     .email(email)
-                     .name("주최자")
-                     .phoneNumber("010-1111-1111")
-                     .role(Role.ORGANIZER)
-                     .gender(Gender.MALE)
-                     .birth(LocalDate.of(1990, 1, 1))
-                     .build()
+        Users organizer = Users.create(
+                email,
+                "주최자",
+                "010-1111-1111",
+                Gender.MALE,
+                LocalDate.of(1990, 1, 1)
         );
+
+        organizer.promoteToOrganizer();
+
+        return userRepository.save(organizer);
     }
 
     private Users saveParticipant(String email) {
         return userRepository.save(
-                Users.builder()
-                     .email(email)
-                     .name("참가자")
-                     .phoneNumber("010-2222-2222")
-                     .role(Role.PARTICIPANT)
-                     .gender(Gender.MALE)
-                     .birth(LocalDate.of(2000, 1, 1))
-                     .build()
+                Users.create(
+                        email,
+                        "참가자",
+                        "010-2222-2222",
+                        Gender.MALE,
+                        LocalDate.of(2000, 1, 1)
+                )
         );
     }
 
@@ -211,7 +209,7 @@ class RegistrationCommandServiceIntegrationTest {
 
     private Marathon saveMarathon(Users organizer, String title) {
         return marathonRepository.saveAndFlush(
-                new Marathon(
+                Marathon.create(
                         organizer,
                         title,
                         "서울",
@@ -219,14 +217,13 @@ class RegistrationCommandServiceIntegrationTest {
                         LocalDate.now().plusDays(10),
                         "poster.png",
                         LocalDateTime.now().minusDays(1),
-                        LocalDateTime.now().plusDays(5),
-                        MarathonStatus.OPEN
+                        LocalDateTime.now().plusDays(5)
                 )
         );
     }
 
     private Course saveCourse(Marathon marathon, int capacity, int currentCount) {
-        Course course = new Course(
+        Course course = Course.create(
                 "10K",
                 BigDecimal.valueOf(30000),
                 capacity,

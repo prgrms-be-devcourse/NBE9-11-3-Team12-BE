@@ -77,6 +77,7 @@ class Users protected constructor() {
     companion object {
 
         // 소셜 로그인 가입
+        @JvmStatic
         fun createOAuth(
             email: String,
             name: String,
@@ -87,6 +88,7 @@ class Users protected constructor() {
         }
 
         // 자체 회원가입
+        @JvmStatic
         fun create(
             email: String,
             name: String,

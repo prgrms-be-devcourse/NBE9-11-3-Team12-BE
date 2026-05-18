@@ -1,15 +1,14 @@
 package com.rungo.api.domain.registration.service;
 
+import com.rungo.api.domain.auth.repository.UserAuthRepository;
 import com.rungo.api.domain.marathon.course.entity.Course;
 import com.rungo.api.domain.marathon.course.repository.CourseRepository;
 import com.rungo.api.domain.marathon.marathon.entity.Marathon;
-import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq;
 import com.rungo.api.domain.registration.entity.Registration;
 import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRepository;
 import com.rungo.api.domain.registration.repository.RegistrationRepository;
-import com.rungo.api.domain.auth.repository.UserAuthRepository;
 import com.rungo.api.domain.users.entity.Users;
 import com.rungo.api.domain.users.enumtype.Gender;
 import com.rungo.api.domain.users.enumtype.Role;
@@ -248,22 +247,25 @@ class RegistrationCommandServiceConcurrencyTest {
     }
 
     private Users saveUser(String email, Role role) {
-        return userRepository.saveAndFlush(
-                Users.builder()
-                        .email(email)
-                        .name(email)
-                        .phoneNumber("010-1111-2222")
-                        .role(role)
-                        .gender(Gender.MALE)
-                        .birth(LocalDate.of(2000, 1, 1))
-                        .build()
+        Users user = Users.create(
+                email,
+                email,
+                "010-1111-2222",
+                Gender.MALE,
+                LocalDate.of(2000, 1, 1)
         );
+
+        if (role == Role.ORGANIZER) {
+            user.promoteToOrganizer();
+        }
+
+        return userRepository.saveAndFlush(user);
     }
 
     private Marathon saveMarathon(String title) {
         Users organizer = saveUser(title + "@organizer.com", Role.ORGANIZER);
         return marathonRepository.saveAndFlush(
-                new Marathon(
+                Marathon.create(
                         organizer,
                         title,
                         "서울",
@@ -271,14 +273,13 @@ class RegistrationCommandServiceConcurrencyTest {
                         LocalDate.of(2026, 10, 3),
                         "poster.png",
                         LocalDateTime.now().minusDays(1),
-                        LocalDateTime.now().plusDays(1),
-                        MarathonStatus.OPEN
+                        LocalDateTime.now().plusDays(1)
                 )
         );
     }
 
     private Course saveCourse(Marathon marathon, int capacity, int currentCount) {
-        Course course = new Course("10K", BigDecimal.valueOf(30000), capacity, currentCount);
+        Course course = Course.create("10K", BigDecimal.valueOf(30000), capacity, currentCount);
         marathon.addCourse(course);
         marathonRepository.saveAndFlush(marathon);
         return courseRepository.findAllByMarathon_IdOrderByIdAsc(marathon.getId()).get(0);

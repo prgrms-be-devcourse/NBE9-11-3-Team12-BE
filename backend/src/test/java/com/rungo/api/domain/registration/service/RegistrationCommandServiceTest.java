@@ -14,7 +14,6 @@ import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRep
 import com.rungo.api.domain.registration.repository.RegistrationRepository;
 import com.rungo.api.domain.users.entity.Users;
 import com.rungo.api.domain.users.enumtype.Gender;
-import com.rungo.api.domain.users.enumtype.Role;
 import com.rungo.api.domain.users.repository.UserRepository;
 import com.rungo.api.global.exception.CustomException;
 import com.rungo.api.global.exception.ErrorCode;
@@ -33,10 +32,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -410,15 +406,17 @@ class RegistrationCommandServiceTest {
     }
 
     private Users createUser(Long id, String name, String phoneNumber) {
-        return Users.builder()
-                .id(id)
-                .email("test@test.com")
-                .name(name)
-                .phoneNumber(phoneNumber)
-                .role(Role.PARTICIPANT)
-                .gender(Gender.MALE)
-                .birth(LocalDate.of(2000, 1, 1))
-                .build();
+        Users user = Users.create(
+                "test@test.com",
+                name,
+                phoneNumber,
+                Gender.MALE,
+                LocalDate.of(2000, 1, 1)
+        );
+
+        ReflectionTestUtils.setField(user, "id", id);
+
+        return user;
     }
 
     private Marathon createMarathon(
@@ -426,7 +424,7 @@ class RegistrationCommandServiceTest {
             LocalDateTime registrationEndAt,
             MarathonStatus status
     ) {
-        return new Marathon(
+        Marathon marathon = Marathon.create(
                 createUser(99L, "주최자", "010-9999-9999"),
                 "서울 마라톤",
                 "서울",
@@ -434,13 +432,16 @@ class RegistrationCommandServiceTest {
                 LocalDate.of(2026, 10, 3),
                 "poster.png",
                 registrationStartAt,
-                registrationEndAt,
-                status
+                registrationEndAt
         );
+        ReflectionTestUtils.setField(marathon, "status", status);
+
+        return marathon;
+
     }
 
     private Course createCourse(Marathon marathon, int capacity, int currentCount) {
-        Course course = new Course("10K", BigDecimal.valueOf(30000), capacity, currentCount);
+        Course course = Course.create("10K", BigDecimal.valueOf(30000), capacity, currentCount);
         marathon.addCourse(course);
         return course;
     }

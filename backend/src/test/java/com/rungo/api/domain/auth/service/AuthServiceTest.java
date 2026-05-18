@@ -12,8 +12,6 @@ import com.rungo.api.global.exception.CustomException;
 import com.rungo.api.global.exception.ErrorCode;
 import com.rungo.api.global.util.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,11 +19,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -78,19 +77,18 @@ class AuthServiceTest {
                 Gender.MALE, LocalDate.of(2000, 1, 1)
         );
 
-        Users savedUser = Users.builder()
-                .id(1L)
-                .email(req.email())
-                .name(req.name())
-                .phoneNumber(req.phoneNumber())
-                .gender(req.gender())
-                .birth(req.birth())
-                .role(Role.PARTICIPANT)
-                .build();
+        Users savedUser = Users.create(
+                req.email(),
+                req.name(),
+                req.phoneNumber(),
+                req.gender(),
+                req.birth()
+        );
 
+        ReflectionTestUtils.setField(savedUser, "id", 1L);
         ReflectionTestUtils.setField(savedUser, "createdAt", java.time.LocalDateTime.now());
 
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
+        given(userRepository.findByEmail(anyString())).willReturn(null);
         given(passwordEncoder.encode(anyString())).willReturn("encoded-pass");
         given(userRepository.save(any(Users.class))).willReturn(savedUser);
 
@@ -111,7 +109,15 @@ class AuthServiceTest {
                 Gender.MALE, LocalDate.of(2000, 1, 1)
         );
 
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(Users.builder().build()));
+        Users existingUser = Users.create(
+                req.email(),
+                req.name(),
+                req.phoneNumber(),
+                req.gender(),
+                req.birth()
+        );
+
+        given(userRepository.findByEmail(anyString())).willReturn(existingUser);
 
         CustomException exception = assertThrows(CustomException.class, () -> authService.signup(req));
         assertEquals(ErrorCode.DUPLICATE_EMAIL, exception.getErrorCode());
@@ -123,16 +129,26 @@ class AuthServiceTest {
     void login_success() {
         LoginReq req = new LoginReq("test@test.com", "pass123!");
 
-        Users user = Users.builder()
-                .id(1L)
-                .email("test@test.com")
-                .name("홍길동")
-                .role(Role.PARTICIPANT)
-                .build();
-        UserAuth userAuth = UserAuth.createLocalAuth(user, "encoded-pass");
+        Users user = Users.create(
+                "test@test.com",
+                "홍길동",
+                "010-1234-5678",
+                Gender.MALE,
+                LocalDate.of(2000, 1, 1)
+        );
 
-        given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
-                .willReturn(Optional.of(userAuth));
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        UserAuth userAuth = UserAuth.createLocalAuth(
+                user,
+                "encoded-pass"
+        );
+
+        given(userAuthRepository.findByUser_EmailAndProvider(
+                req.email(),
+                Provider.LOCAL
+        )).willReturn(userAuth);
+
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
 
         LoginResult result = authService.login(req);
@@ -154,7 +170,7 @@ class AuthServiceTest {
         LoginReq req = new LoginReq("notfound@test.com", "pass123!");
 
         given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
-                .willReturn(Optional.empty());
+                .willReturn(null);
 
         CustomException exception = assertThrows(CustomException.class, () -> authService.login(req));
         assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
@@ -165,13 +181,17 @@ class AuthServiceTest {
     void login_fail_password_mismatch() {
         LoginReq req = new LoginReq("test@test.com", "wrong-pass");
 
-        Users user = Users.builder()
-                .email("test@test.com")
-                .build();
+        Users user = Users.create(
+                "test@test.com",
+                "홍길동",
+                "010-1234-5678",
+                Gender.MALE,
+                LocalDate.of(2000, 1, 1)
+        );
         UserAuth userAuth = UserAuth.createLocalAuth(user, "encoded-pass");
 
         given(userAuthRepository.findByUser_EmailAndProvider(req.email(), Provider.LOCAL))
-                .willReturn(Optional.of(userAuth));
+                .willReturn(userAuth);
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
 
         CustomException exception = assertThrows(CustomException.class, () -> authService.login(req));
