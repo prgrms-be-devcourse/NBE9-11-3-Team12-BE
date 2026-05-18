@@ -11,8 +11,8 @@ import com.rungo.api.domain.marathon.marathon.entity.Marathon;
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus;
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository;
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent;
-import com.rungo.api.domain.registration.repository.RegistrationRepository;
 import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRepository;
+import com.rungo.api.domain.registration.repository.RegistrationRepository;
 import com.rungo.api.domain.users.entity.Users;
 import com.rungo.api.domain.users.enumtype.Gender;
 import com.rungo.api.domain.users.enumtype.Role;
@@ -25,7 +25,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class MarathonServiceTest {
 
-    @InjectMocks
     private MarathonService marathonService;
 
     @Mock
@@ -72,8 +70,16 @@ class MarathonServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(marathonService, "minDaysBetweenStartAndEnd", 1L);
-        ReflectionTestUtils.setField(marathonService, "minDaysBetweenEndAndEvent", 1L);
+        marathonService = new MarathonService(
+                marathonRepository,
+                userRepository,
+                registrationRepository,
+                registrationCancelHistoryRepository,
+                eventPublisher,
+                fileStorageService,
+                1L,
+                1L
+        );
     }
 
     @Test
@@ -113,116 +119,82 @@ class MarathonServiceTest {
     @Test
 
     @DisplayName("마라톤 생성 성공 - 저장과 응답 반환 및 코스 정규화가 정상 동작한다")
-
     void create_success() {
-
         Long organizerId = 1L;
-
         Users organizer = createUser(organizerId, "주최자", Role.ORGANIZER);
 
         CreateMarathonReq request = new CreateMarathonReq(
-
                 "서울 마라톤",
-
                 "서울",
                 "성동구",
                 LocalDate.of(2026, 10, 3),
-
                 posterImage("poster.png"),
-
                 LocalDateTime.of(2026, 8, 1, 9, 0),
-
                 LocalDateTime.of(2026, 8, 31, 18, 0),
-
                 List.of(
-
                         new CreateMarathonReq.CreateCourseItemReq("5k", new BigDecimal("30000"), 100),
-
                         new CreateMarathonReq.CreateCourseItemReq("10K", new BigDecimal("50000"), 200)
-
                 )
-
         );
 
         given(userRepository.findById(organizerId)).willReturn(Optional.of(organizer));
         given(fileStorageService.saveMarathonPoster(any())).willReturn("poster.png");
 
+        LocalDateTime now = LocalDateTime.of(2026, 7, 1, 12, 0);
         given(marathonRepository.save(any(Marathon.class))).willAnswer(invocation -> {
-
             Marathon saved = invocation.getArgument(0);
 
             ReflectionTestUtils.setField(saved, "id", 10L);
+            ReflectionTestUtils.setField(saved, "createdAt", now);
+            ReflectionTestUtils.setField(saved.getCourses().get(0), "id", 101L);
+            ReflectionTestUtils.setField(saved.getCourses().get(1), "id", 102L);
 
             return saved;
-
         });
 
         CreateMarathonRes result = marathonService.createMarathon(organizerId, request);
 
         ArgumentCaptor<Marathon> marathonCaptor = ArgumentCaptor.forClass(Marathon.class);
-
         verify(marathonRepository, times(1)).save(marathonCaptor.capture());
 
         Marathon capturedMarathon = marathonCaptor.getValue();
 
         assertSame(organizer, capturedMarathon.getOrganizer());
-
         assertEquals("서울 마라톤", capturedMarathon.getTitle());
-
         assertEquals("서울", capturedMarathon.getRegion());
-
         assertEquals(LocalDate.of(2026, 10, 3), capturedMarathon.getEventDate());
-
         assertEquals("poster.png", capturedMarathon.getPosterImageUrl());
-
         assertEquals(LocalDateTime.of(2026, 8, 1, 9, 0), capturedMarathon.getRegistrationStartAt());
-
         assertEquals(LocalDateTime.of(2026, 8, 31, 18, 0), capturedMarathon.getRegistrationEndAt());
-
         assertEquals(MarathonStatus.OPEN, capturedMarathon.getStatus());
 
         assertEquals(2, capturedMarathon.getCourses().size());
 
         assertEquals("5K", capturedMarathon.getCourses().get(0).getCourseType());
-
         assertEquals(new BigDecimal("30000"), capturedMarathon.getCourses().get(0).getPrice());
-
         assertEquals(100, capturedMarathon.getCourses().get(0).getCapacity());
-
         assertEquals(0, capturedMarathon.getCourses().get(0).getCurrentCount());
 
         assertEquals("10K", capturedMarathon.getCourses().get(1).getCourseType());
-
         assertEquals(new BigDecimal("50000"), capturedMarathon.getCourses().get(1).getPrice());
-
         assertEquals(200, capturedMarathon.getCourses().get(1).getCapacity());
-
         assertEquals(0, capturedMarathon.getCourses().get(1).getCurrentCount());
 
         assertNotNull(result);
-
         assertEquals(10L, result.id);
-
         assertEquals("서울 마라톤", result.title);
-
         assertEquals("서울", result.region);
-
         assertEquals(LocalDate.of(2026, 10, 3), result.eventDate);
-
         assertEquals("poster.png", result.posterImageUrl);
-
         assertEquals(LocalDateTime.of(2026, 8, 1, 9, 0), result.registrationStartAt);
-
         assertEquals(LocalDateTime.of(2026, 8, 31, 18, 0), result.registrationEndAt);
-
         assertEquals(MarathonStatus.OPEN, result.status);
 
         assertEquals(2, result.courses.size());
-
+        assertEquals(101L, result.courses.get(0).id);
         assertEquals("5K", result.courses.get(0).courseType);
-
+        assertEquals(102L, result.courses.get(1).id);
         assertEquals("10K", result.courses.get(1).courseType);
-
     }
 
     @Test
@@ -811,7 +783,6 @@ class MarathonServiceTest {
                 MarathonStatus.OPEN
         );
 
-        ReflectionTestUtils.setField(marathon, "id", 10L);
 
         UpdateMarathonReq request = new UpdateMarathonReq(
                 "수정된 서울 마라톤",
