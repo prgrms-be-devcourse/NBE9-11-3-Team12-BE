@@ -56,7 +56,6 @@ class MarathonService(
 
         val posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage)
 
-
         validateMarathonSchedule(
             req.registrationStartAt,
             req.registrationEndAt,
@@ -82,7 +81,7 @@ class MarathonService(
 
         req.courses.forEach { courseReq ->
             marathon.addCourse(
-                Course(
+                Course.create(
                     normalizeCourseType(courseReq.courseType),
                     courseReq.price,
                     courseReq.capacity,
@@ -196,8 +195,9 @@ class MarathonService(
             eventDate
         )
 
-        val posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage)
-
+        val posterImageUrl = req.posterImage?.let {
+            fileStorageService.saveMarathonPoster(it)
+        }
         //기존에 있는 Course를 Map으로 저장
         val courseMap = toCourseMap(marathon)
 
@@ -221,7 +221,7 @@ class MarathonService(
                 ?: throw CustomException(ErrorCode.COURSE_NOT_FOUND)
 
             course.updateCourseInfo(
-                courseReq.courseType,
+                courseReq.courseType?.let(::normalizeCourseType),
                 courseReq.price,
                 courseReq.capacity,
             )
@@ -345,7 +345,7 @@ class MarathonService(
 
     private fun activateIfStarted(marathon: Marathon) {
         if (marathon.status == MarathonStatus.TEMP
-            && !LocalDateTime.now().isBefore(marathon.getRegistrationStartAt())
+            && !LocalDateTime.now().isBefore(marathon.registrationStartAt)
         ) {
             marathon.open()
         }

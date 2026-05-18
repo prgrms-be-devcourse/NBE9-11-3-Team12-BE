@@ -46,8 +46,8 @@ data class CourseItemRes(
             price = course.price,
             capacity = course.capacity,
             currentCount = course.currentCount,
-            remainingCount = course.remainingCount,
-            status = course.status
+            remainingCount = course.getRemainingCount(),
+            status = course.getStatus()
         )
     }
 
