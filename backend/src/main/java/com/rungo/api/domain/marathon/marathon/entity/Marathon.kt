@@ -79,8 +79,10 @@ class Marathon protected constructor() {
         fetch = FetchType.LAZY,
         orphanRemoval = true
     )
-    val courses: MutableList<Course> = mutableListOf()
+    private val _courses: MutableList<Course> = mutableListOf()
 
+    val courses: List<Course>
+        get() = _courses
     fun isOpen(): Boolean = status == MarathonStatus.OPEN
 
     fun isCanceled(): Boolean {
@@ -89,7 +91,7 @@ class Marathon protected constructor() {
     }
 
     fun addCourse(course: Course) {
-        courses.add(course)
+        _courses.add(course)
         course.assignMarathon(this)
     }
 
