@@ -61,9 +61,9 @@ class Course protected constructor() {
         price: BigDecimal?,
         capacity: Int?
     ) {
-        courseType?.let { this.courseType = courseType}
-        price?.let {this.price = price}
-        capacity?.let {this.capacity = capacity}
+        courseType?.let { this.courseType = it}
+        price?.let {this.price = it}
+        capacity?.let {this.capacity = it}
     }
 
     companion object {
