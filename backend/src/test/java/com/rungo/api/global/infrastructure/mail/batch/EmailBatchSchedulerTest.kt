@@ -1,10 +1,11 @@
 package com.rungo.api.global.infrastructure.mail.batch
 
+import EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
-import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,11 +34,11 @@ class EmailBatchSchedulerTest {
     }
 
     @Test
-    @DisplayName("PENDING, FAILED 상태의 이메일이 없으면 Processor를 호출하지 않는다")
+    @DisplayName("PENDING 상태의 이메일이 없으면 Processor를 호출하지 않는다")
     fun sendPendingEmails_empty() {
         given(
-            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
-                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
+            emailOutboxRepository.findTop50ByStatusOrderByCreatedAtAsc(
+                EmailOutboxStatus.PENDING
             )
         ).willReturn(emptyList())
 
@@ -47,19 +48,23 @@ class EmailBatchSchedulerTest {
     }
 
     @Test
-    @DisplayName("PENDING, FAILED 상태의 이메일을 조회해 Processor에 위임한다")
+    @DisplayName("PENDING 상태의 이메일을 조회하면 PROCESSING으로 선점 후 Processor에 위임한다")
     fun sendPendingEmails_success() {
         val outbox1 = createOutbox(1L)
         val outbox2 = createOutbox(2L)
         val outbox3 = createOutbox(3L)
 
         given(
-            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
-                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
+            emailOutboxRepository.findTop50ByStatusOrderByCreatedAtAsc(
+                EmailOutboxStatus.PENDING
             )
         ).willReturn(listOf(outbox1, outbox2, outbox3))
 
         emailBatchScheduler.sendPendingEmails()
+
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox1.status)
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox2.status)
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox3.status)
 
         verify(emailOutboxProcessor).process(1L)
         verify(emailOutboxProcessor).process(2L)
@@ -74,8 +79,8 @@ class EmailBatchSchedulerTest {
         val outbox3 = createOutbox(3L)
 
         given(
-            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
-                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
+            emailOutboxRepository.findTop50ByStatusOrderByCreatedAtAsc(
+                EmailOutboxStatus.PENDING
             )
         ).willReturn(listOf(outbox1, outbox2, outbox3))
 
@@ -86,6 +91,10 @@ class EmailBatchSchedulerTest {
         assertDoesNotThrow {
             emailBatchScheduler.sendPendingEmails()
         }
+
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox1.status)
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox2.status)
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox3.status)
 
         verify(emailOutboxProcessor).process(1L)
         verify(emailOutboxProcessor).process(2L)
@@ -100,6 +109,7 @@ class EmailBatchSchedulerTest {
         )
 
         ReflectionTestUtils.setField(outbox, "id", id)
+
         return outbox
     }
 }

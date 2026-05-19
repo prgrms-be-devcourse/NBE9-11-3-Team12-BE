@@ -1,8 +1,8 @@
 package com.rungo.api.domain.notification.listener
 
+import EmailOutboxStatus
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent
 import com.rungo.api.domain.notification.event.RegistrationCompletedEvent
-import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -25,7 +25,7 @@ class NotificationIntegrationTest {
 
     @AfterEach
     fun tearDown() {
-        emailOutboxRepository.deleteAll()
+        emailOutboxRepository.deleteAllInBatch()
     }
 
     @Test
@@ -48,11 +48,15 @@ class NotificationIntegrationTest {
         assertThat(outboxes).hasSize(1)
 
         val outbox = outboxes[0]
+
         assertThat(outbox.recipient).isEqualTo("test@test.com")
         assertThat(outbox.subject).contains("참가 접수 완료")
         assertThat(outbox.body).contains("통합테스트 마라톤")
         assertThat(outbox.body).contains("10km")
-        assertThat(outbox.status).isEqualTo(EmailOutboxStatus.PENDING)
+        assertThat(outbox.status).isIn(
+            EmailOutboxStatus.PENDING,
+            EmailOutboxStatus.PROCESSING,
+        )
         assertThat(outbox.retryCount).isEqualTo(0)
     }
 
@@ -60,6 +64,8 @@ class NotificationIntegrationTest {
     @Transactional
     @DisplayName("트랜잭션이 롤백되면 접수 완료 이벤트가 발행되어도 Outbox에 저장되지 않는다")
     fun registration_completed_event_rollback_does_not_save_outbox() {
+        val beforeCount = emailOutboxRepository.count()
+
         val event = RegistrationCompletedEvent(
             email = "rollback@test.com",
             marathonTitle = "롤백 마라톤",
@@ -71,13 +77,15 @@ class NotificationIntegrationTest {
         TestTransaction.flagForRollback()
         TestTransaction.end()
 
-        assertThat(emailOutboxRepository.findAll()).isEmpty()
+        assertThat(emailOutboxRepository.count()).isEqualTo(beforeCount)
     }
 
     @Test
     @Transactional
     @DisplayName("대회 취소 이벤트가 발행되면, 커밋 시 참가자 수만큼 Outbox에 이메일 발송 정보가 저장된다")
     fun marathon_cancel_event_commit_saves_outboxes() {
+        val beforeCount = emailOutboxRepository.count()
+
         val event = MarathonCanceledEvent(
             marathonTitle = "서울 마라톤",
             participantEmails = listOf("user1@test.com", "user2@test.com")
@@ -88,26 +96,45 @@ class NotificationIntegrationTest {
         TestTransaction.flagForCommit()
         TestTransaction.end()
 
-        val outboxes = emailOutboxRepository.findAll()
-            .sortedBy { it.recipient }
+        val outboxes =
+            emailOutboxRepository.findAll()
+                .sortedBy { it.recipient }
 
-        assertThat(outboxes).hasSize(2)
+        assertThat(outboxes).hasSize(beforeCount.toInt() + 2)
 
-        assertThat(outboxes[0].recipient).isEqualTo("user1@test.com")
-        assertThat(outboxes[0].subject).contains("대회 취소")
-        assertThat(outboxes[0].body).contains("서울 마라톤")
-        assertThat(outboxes[0].status).isEqualTo(EmailOutboxStatus.PENDING)
+        val createdOutboxes =
+            outboxes.filter {
+                it.recipient in listOf(
+                    "user1@test.com",
+                    "user2@test.com",
+                )
+            }.sortedBy { it.recipient }
 
-        assertThat(outboxes[1].recipient).isEqualTo("user2@test.com")
-        assertThat(outboxes[1].subject).contains("대회 취소")
-        assertThat(outboxes[1].body).contains("서울 마라톤")
-        assertThat(outboxes[1].status).isEqualTo(EmailOutboxStatus.PENDING)
+        assertThat(createdOutboxes).hasSize(2)
+
+        assertThat(createdOutboxes[0].recipient).isEqualTo("user1@test.com")
+        assertThat(createdOutboxes[0].subject).contains("대회 취소")
+        assertThat(createdOutboxes[0].body).contains("서울 마라톤")
+        assertThat(createdOutboxes[0].status).isIn(
+            EmailOutboxStatus.PENDING,
+            EmailOutboxStatus.PROCESSING,
+        )
+
+        assertThat(createdOutboxes[1].recipient).isEqualTo("user2@test.com")
+        assertThat(createdOutboxes[1].subject).contains("대회 취소")
+        assertThat(createdOutboxes[1].body).contains("서울 마라톤")
+        assertThat(createdOutboxes[1].status).isIn(
+            EmailOutboxStatus.PENDING,
+            EmailOutboxStatus.PROCESSING,
+        )
     }
 
     @Test
     @Transactional
     @DisplayName("대회 취소 이벤트가 발행되어도 트랜잭션이 롤백되면 Outbox에 저장되지 않는다")
     fun marathon_cancel_event_rollback_does_not_save_outbox() {
+        val beforeCount = emailOutboxRepository.count()
+
         val event = MarathonCanceledEvent(
             marathonTitle = "서울 마라톤",
             participantEmails = listOf("user1@test.com", "user2@test.com")
@@ -118,6 +145,6 @@ class NotificationIntegrationTest {
         TestTransaction.flagForRollback()
         TestTransaction.end()
 
-        assertThat(emailOutboxRepository.findAll()).isEmpty()
+        assertThat(emailOutboxRepository.count()).isEqualTo(beforeCount)
     }
 }

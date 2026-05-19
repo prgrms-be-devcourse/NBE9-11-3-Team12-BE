@@ -1,11 +1,11 @@
 package com.rungo.api.domain.notification.listener
 
+import EmailOutboxStatus
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent
 import com.rungo.api.domain.notification.event.RegistrationCompletedEvent
 import com.rungo.api.domain.notification.support.NotificationEmailFactory
 import com.rungo.api.global.infrastructure.mail.EmailMessage
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
-import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
@@ -61,6 +61,7 @@ class NotificationEventListenerTest {
         verify(emailOutboxRepository).save(captureEmailOutbox(captor))
 
         val savedOutbox = captor.value
+
         assertEquals("user@test.com", savedOutbox.recipient)
         assertEquals("[Rungo] 참가 접수 완료", savedOutbox.subject)
         assertEquals("서울 마라톤 10K 접수가 완료되었습니다.", savedOutbox.body)

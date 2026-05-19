@@ -1,5 +1,6 @@
 package com.rungo.api.domain.marathon.marathon.service
 
+import EmailOutboxStatus
 import com.rungo.api.domain.auth.repository.UserAuthRepository
 import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.course.repository.CourseRepository
@@ -11,18 +12,14 @@ import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Gender
 import com.rungo.api.domain.users.repository.UserRepository
-import com.rungo.api.global.infrastructure.mail.EmailMessage
-import com.rungo.api.global.infrastructure.mail.EmailService
+import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -49,11 +46,12 @@ internal class MarathonServiceIntegrationTest {
     @Autowired
     lateinit var registrationRepository: RegistrationRepository
 
-    @MockitoBean
-    lateinit var emailService: EmailService
+    @Autowired
+    lateinit var emailOutboxRepository: EmailOutboxRepository
 
     @AfterEach
     fun tearDown() {
+        emailOutboxRepository.deleteAllInBatch()
         registrationRepository.deleteAllInBatch()
         courseRepository.deleteAllInBatch()
         marathonRepository.deleteAllInBatch()
@@ -62,8 +60,8 @@ internal class MarathonServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("대회 취소 성공 시 참가자 대상 이메일이 비동기로 발송되고 상태가 변경된다")
-    fun cancelMarathonSuccessEmailSendTest() {
+    @DisplayName("대회 취소 성공 시 참가자 수만큼 Outbox에 이메일 발송 정보가 저장되고 상태가 변경된다")
+    fun cancelMarathonSuccessEmailOutboxTest() {
         val organizer = saveOrganizer("organizer@test.com")
         val participant1 = saveParticipant("user1@test.com")
         val participant2 = saveParticipant("user2@test.com")
@@ -76,21 +74,49 @@ internal class MarathonServiceIntegrationTest {
 
         marathonService.cancelMarathon(organizer.id, marathon.id)
 
-        val savedMarathon = marathonRepository.findById(marathon.id).orElseThrow()
+        val savedMarathon =
+            marathonRepository.findById(marathon.id)
+                .orElseThrow()
 
-        assertThat(savedMarathon.status).isEqualTo(MarathonStatus.CANCELED)
+        assertThat(savedMarathon.status)
+            .isEqualTo(MarathonStatus.CANCELED)
 
-        Mockito.verify(emailService, Mockito.timeout(2_000).times(2))
-            .send(anyEmailMessage())
+        val outboxes =
+            emailOutboxRepository.findAll()
+                .filter {
+                    it.recipient in listOf(
+                        "user1@test.com",
+                        "user2@test.com",
+                    )
+                }
+                .sortedBy { it.recipient }
+
+        assertThat(outboxes).hasSize(2)
+
+        assertThat(outboxes[0].recipient)
+            .isEqualTo("user1@test.com")
+        assertThat(outboxes[0].subject)
+            .contains("대회 취소")
+        assertThat(outboxes[0].status)
+            .isIn(
+                EmailOutboxStatus.PENDING,
+                EmailOutboxStatus.PROCESSING,
+            )
+
+        assertThat(outboxes[1].recipient)
+            .isEqualTo("user2@test.com")
+        assertThat(outboxes[1].subject)
+            .contains("대회 취소")
+        assertThat(outboxes[1].status)
+            .isIn(
+                EmailOutboxStatus.PENDING,
+                EmailOutboxStatus.PROCESSING,
+            )
     }
 
     @Test
-    @DisplayName("대회 취소 중 이메일 발송 실패가 발생해도 상태 변경은 정상 커밋된다")
-    fun cancelMarathonEmailExceptionIsolationTest() {
-        Mockito.doThrow(RuntimeException("SMTP 서버 강제 다운"))
-            .`when`(emailService)
-            .send(anyEmailMessage())
-
+    @DisplayName("대회 취소 시 Outbox 저장이 발생해도 상태 변경은 정상 커밋된다")
+    fun cancelMarathonOutboxIsolationTest() {
         val organizer = saveOrganizer("organizer-fail@test.com")
         val participant1 = saveParticipant("fail-user1@test.com")
         val participant2 = saveParticipant("fail-user2@test.com")
@@ -103,12 +129,23 @@ internal class MarathonServiceIntegrationTest {
 
         marathonService.cancelMarathon(organizer.id, marathon.id)
 
-        val savedMarathon = marathonRepository.findById(marathon.id).orElseThrow()
+        val savedMarathon =
+            marathonRepository.findById(marathon.id)
+                .orElseThrow()
 
-        assertThat(savedMarathon.status).isEqualTo(MarathonStatus.CANCELED)
+        assertThat(savedMarathon.status)
+            .isEqualTo(MarathonStatus.CANCELED)
 
-        Mockito.verify(emailService, Mockito.timeout(2_000).atLeastOnce())
-            .send(anyEmailMessage())
+        val outboxes =
+            emailOutboxRepository.findAll()
+                .filter {
+                    it.recipient in listOf(
+                        "fail-user1@test.com",
+                        "fail-user2@test.com",
+                    )
+                }
+
+        assertThat(outboxes).hasSize(2)
     }
 
     private fun saveOrganizer(email: String): Users =
@@ -157,7 +194,8 @@ internal class MarathonServiceIntegrationTest {
 
         marathon.addCourse(course)
 
-        val savedMarathon = marathonRepository.save(marathon)
+        val savedMarathon =
+            marathonRepository.save(marathon)
 
         return savedMarathon.courses[0]
     }
@@ -179,9 +217,4 @@ internal class MarathonServiceIntegrationTest {
                 true,
             )
         )
-
-    private fun anyEmailMessage(): EmailMessage {
-        ArgumentMatchers.any(EmailMessage::class.java)
-        return EmailMessage("", "", "")
-    }
 }

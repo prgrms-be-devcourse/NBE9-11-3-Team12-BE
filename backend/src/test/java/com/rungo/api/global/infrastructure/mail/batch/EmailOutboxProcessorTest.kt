@@ -1,9 +1,9 @@
 package com.rungo.api.global.infrastructure.mail.batch
 
+import EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.EmailMessage
 import com.rungo.api.global.infrastructure.mail.EmailService
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
-import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
@@ -30,13 +30,14 @@ class EmailOutboxProcessorTest {
     private lateinit var emailService: EmailService
 
     @Test
-    @DisplayName("PENDING 상태의 이메일 발송에 성공하면 SUCCESS 상태로 변경된다")
+    @DisplayName("PROCESSING 상태의 이메일 발송에 성공하면 SUCCESS 상태로 변경된다")
     fun process_success() {
         val outbox = EmailOutbox.create(
             recipient = "user@test.com",
             subject = "접수 완료",
             body = "접수가 완료되었습니다."
         )
+        outbox.markAsProcessing()
 
         given(emailOutboxRepository.findById(1L))
             .willReturn(Optional.of(outbox))
@@ -59,6 +60,7 @@ class EmailOutboxProcessorTest {
             subject = "접수 완료",
             body = "접수가 완료되었습니다."
         )
+        outbox.markAsProcessing()
 
         given(emailOutboxRepository.findById(1L))
             .willReturn(Optional.of(outbox))
@@ -88,6 +90,7 @@ class EmailOutboxProcessorTest {
 
         outbox.markAsFailed("1차 실패")
         outbox.markAsFailed("2차 실패")
+        outbox.markAsProcessing()
 
         given(emailOutboxRepository.findById(1L))
             .willReturn(Optional.of(outbox))
