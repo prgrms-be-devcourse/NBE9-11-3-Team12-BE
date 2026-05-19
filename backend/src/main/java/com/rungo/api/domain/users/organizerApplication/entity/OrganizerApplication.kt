@@ -1,16 +1,16 @@
-package com.rungo.api.domain.users.organizerApproval.entity
+package com.rungo.api.domain.users.organizerApplication.entity
 
 import com.rungo.api.domain.users.entity.Users
-import com.rungo.api.domain.users.organizerApproval.status.ApproveStatus
+import com.rungo.api.domain.users.organizerApplication.status.ApplicationStatus
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "organizer_approvals")
+@Table(name = "organizer_application")
 @EntityListeners(AuditingEntityListener::class)
-class OrganizerApproval protected constructor() {
+class OrganizerApplication protected constructor() {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +28,7 @@ class OrganizerApproval protected constructor() {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    lateinit var status: ApproveStatus
+    lateinit var status: ApplicationStatus
         protected set
 
     @Column(length = 500)
@@ -44,11 +44,11 @@ class OrganizerApproval protected constructor() {
         fun create(
             user: Users,
             businessRegistrationNumber: String,
-        ): OrganizerApproval =
-            OrganizerApproval().apply {
+        ): OrganizerApplication =
+            OrganizerApplication().apply {
                 this.user = user
                 this.businessRegistrationNumber = businessRegistrationNumber
-                this.status = ApproveStatus.PENDING
+                this.status = ApplicationStatus.PENDING
             }
     }
 }
