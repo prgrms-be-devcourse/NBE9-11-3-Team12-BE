@@ -6,6 +6,9 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import java.time.LocalDate
 
 interface MarathonRepository : JpaRepository<Marathon, Long> {
 
@@ -29,4 +32,7 @@ interface MarathonRepository : JpaRepository<Marathon, Long> {
     ): List<Marathon>
 
     fun findByOrganizerId(organizerId: Long): List<Marathon>
+
+    @Query("SELECT m.id FROM Marathon m WHERE m.eventDate < :date")
+    fun findIdsByEventDateBefore(@Param("date") date: LocalDate): List<Long>
 }

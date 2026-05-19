@@ -7,6 +7,8 @@ import com.rungo.api.domain.marathon.course.repository.CourseRepository
 import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
 import com.rungo.api.domain.registration.entity.Registration
+import com.rungo.api.domain.registration.entity.RegistrationCancelHistory
+import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRepository
 import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Gender
@@ -28,6 +30,7 @@ class DataInitializer(
     private val marathonRepository: MarathonRepository,
     private val courseRepository: CourseRepository,
     private val registrationRepository: RegistrationRepository,
+    private val registrationCancelHistoryRepository: RegistrationCancelHistoryRepository,
     private val passwordEncoder: PasswordEncoder,
 ) {
 
@@ -41,14 +44,40 @@ class DataInitializer(
     @Bean
     fun initTestData() = CommandLineRunner {
 
+        initAdmin()
         val organizer = initOrganizer()
         initParticipants()
         initPerformanceMarathon(organizer)
         initCancelTestMarathons(organizer)
+        initCleanupTestData(organizer)
 
         println("테스트 유저 / 마라톤 / 코스 / 취소 테스트 데이터 생성 완료")
+        println("admin: admin@test.com / $TEST_PASSWORD")
         println("organizer: organizer@test.com / $TEST_PASSWORD")
         println("participants: user1@test.com ~ user$TEST_USER_COUNT@test.com / $TEST_PASSWORD")
+    }
+
+    private fun initAdmin() {
+        if (userRepository.findByEmail("admin@test.com") != null) return
+
+        val admin = Users.create(
+            email = "admin@test.com",
+            name = "관리자",
+            phoneNumber = "010-0000-0000",
+            gender = Gender.MALE,
+            birth = LocalDate.of(2000, 1, 1),
+        ).apply {
+            promoteToAdmin()
+        }
+
+        val saved = userRepository.save(admin)
+
+        userAuthRepository.save(
+            UserAuth.createLocalAuth(
+                saved,
+                passwordEncoder.encode(TEST_PASSWORD),
+            )
+        )
     }
 
     private fun initOrganizer(): Users =
@@ -161,6 +190,74 @@ class DataInitializer(
         savedMarathon.addCourse(course)
 
         courseRepository.save(course)
+    }
+
+    private fun initCleanupTestData(organizer: Users) {
+        val title = "초기화 테스트용 마라톤"
+        val exists = marathonRepository.findAllByTitleStartingWith(title).any { it.title == title }
+        if (exists) return
+
+        // 5년 + 1일 전 대회
+        val marathon = Marathon.create(
+            organizer = organizer,
+            title = title,
+            region = "서울",
+            detailedAddress = "성동구",
+            eventDate = LocalDate.now().minusYears(5).minusDays(1),
+            posterImageUrl = "poster.png",
+            registrationStartAt = LocalDateTime.now().minusYears(5).minusMonths(3),
+            registrationEndAt = LocalDateTime.now().minusYears(5).minusMonths(1),
+        )
+        val savedMarathon = marathonRepository.save(marathon)
+
+        val course = Course.create(
+            courseType = "10K",
+            price = BigDecimal.valueOf(30000),
+            capacity = 1000,
+            currentCount = 0,
+        )
+        savedMarathon.addCourse(course)
+        val savedCourse = courseRepository.save(course)
+
+        // 접수 내역 (Registration) 생성 - user4~6
+        val activeRegistrations = (4..6).map { i ->
+            val user = userRepository.findByEmail("user$i@test.com")
+                ?: throw IllegalStateException("user$i@test.com not found")
+            Registration.create(
+                user = user,
+                course = savedCourse,
+                marathon = savedMarathon,
+                snapZipCode = "12345",
+                snapAddress = "서울시 강남구",
+                snapDetail = "101동",
+                tSize = "M",
+                agreedTerms = true,
+            )
+        }
+        registrationRepository.saveAll(activeRegistrations)
+
+        // 취소 내역 (RegistrationCancelHistory) 생성 - user1~3
+        val cancelRegistrations = (1..3).map { i ->
+            val user = userRepository.findByEmail("user$i@test.com")
+                ?: throw IllegalStateException("user$i@test.com not found")
+            Registration.create(
+                user = user,
+                course = savedCourse,
+                marathon = savedMarathon,
+                snapZipCode = "12345",
+                snapAddress = "서울시 강남구",
+                snapDetail = "101동",
+                tSize = "L",
+                agreedTerms = true,
+            )
+        }
+        val savedCancelRegistrations = registrationRepository.saveAll(cancelRegistrations)
+        registrationCancelHistoryRepository.saveAll(
+            savedCancelRegistrations.map { RegistrationCancelHistory.create(it) }
+        )
+        registrationRepository.deleteAll(savedCancelRegistrations)
+
+        println("초기화 테스트 데이터 생성 완료 (5년 전 마라톤 / 접수 3건 / 취소 내역 3건)")
     }
 
     private fun initCancelTestMarathons(organizer: Users) {

@@ -1,5 +1,6 @@
 package com.rungo.api.domain.users.admin.controller
 
+import com.rungo.api.domain.marathon.marathon.service.MarathonCleanupService
 import com.rungo.api.domain.users.admin.dto.AdminApproveRes
 import com.rungo.api.domain.users.admin.service.AdminService
 import com.rungo.api.global.response.ApiResponse
@@ -13,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
@@ -23,7 +25,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 @Tag(name = "Admin", description = "관리자 API")
 @SecurityRequirement(name = "accessTokenCookie")
 class AdminController(
-    private val adminService: AdminService
+    private val adminService: AdminService,
+    private val marathonCleanupService: MarathonCleanupService,
 ) {
 
 
@@ -45,5 +48,17 @@ class AdminController(
         val adminApproveRes = adminService.approveOrganizer(admin.id, userId)
 
         return ResponseEntity.ok(ApiResponse.ok(adminApproveRes))
+    }
+
+    @PostMapping("/cleanup")
+    @Operation(summary = "데이터 초기화", description = "기간이 지난 대회, 접수 내역, 취소 내역을 삭제합니다.")
+    @ApiResponses(
+        SwaggerResponse(responseCode = "200", description = "초기화 성공"),
+        SwaggerResponse(responseCode = "401", description = "인증 필요"),
+        SwaggerResponse(responseCode = "403", description = "관리자 권한 필요"),
+    )
+    fun cleanup(): ResponseEntity<ApiResponse<Void?>> {
+        marathonCleanupService.cleanup()
+        return ResponseEntity.ok(ApiResponse.okMessage("데이터 초기화가 완료되었습니다."))
     }
 }
