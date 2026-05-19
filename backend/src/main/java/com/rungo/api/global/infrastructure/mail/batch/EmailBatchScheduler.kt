@@ -6,7 +6,6 @@ import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
@@ -22,7 +21,6 @@ class EmailBatchScheduler(
         Executors.newFixedThreadPool(MAIL_BATCH_THREAD_COUNT)
 
     @Scheduled(fixedDelay = MAIL_BATCH_FIXED_DELAY)
-    @Transactional
     fun sendPendingEmails() {
 
         val targetOutboxes =
