@@ -33,8 +33,6 @@ interface MarathonRepository : JpaRepository<Marathon, Long> {
 
     fun findByOrganizerId(organizerId: Long): List<Marathon>
 
-    fun findAllByEventDateBefore(date: LocalDate): List<Marathon>
-
     @Query("SELECT m.id FROM Marathon m WHERE m.eventDate < :date")
     fun findIdsByEventDateBefore(@Param("date") date: LocalDate): List<Long>
 }

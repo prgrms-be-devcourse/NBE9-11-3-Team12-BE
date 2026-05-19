@@ -23,7 +23,7 @@ class MarathonCleanupService(
         if (fiveYearsAgoIds.isNotEmpty()) {
             registrationCancelHistoryRepository.deleteAllByMarathonIdIn(fiveYearsAgoIds)
             registrationRepository.deleteAllByMarathonIdIn(fiveYearsAgoIds)
-            val marathons = marathonRepository.findAllByEventDateBefore(now.minusYears(5))
+            val marathons = marathonRepository.findAllById(fiveYearsAgoIds)
             marathonRepository.deleteAll(marathons)
         }
     }
