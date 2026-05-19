@@ -68,6 +68,15 @@ marathon:
     start-to-end: 1
     end-to-event: 1
 
+registration:
+  queue:
+    poll-interval: 100 # ms
+    worker-concurrency: 5
+    course-queue-max-size: 300
+    processing-ttl: 30 # seconds
+    payload-ttl: 5 # minutes
+    result-ttl: 5 # minutes
+
 app:
   mail:
     enabled: true
