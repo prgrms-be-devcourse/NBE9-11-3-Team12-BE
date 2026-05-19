@@ -3,7 +3,6 @@ package com.rungo.api.domain.auth.dto
 import com.rungo.api.domain.users.enumtype.Role
 import io.swagger.v3.oas.annotations.media.Schema
 
-@JvmRecord
 @Schema(description = "로그인 응답 DTO")
 data class LoginRes(
         @field:Schema(description = "사용자 ID", example = "1")
