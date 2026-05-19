@@ -1,0 +1,141 @@
+name: CI
+
+# 실행 트리거
+# - dev 브랜치로 PR 생성/업데이트 시 실행
+# - dev 브랜치에 push 될 때 실행
+on:
+  pull_request:
+    branches: [ "dev" ]
+  push:
+    branches: [ "dev" ]
+
+# GitHub Actions 권한 설정
+# - contents: 코드 checkout 권한
+# - actions: 테스트 리포트 액션에서 workflow 실행 정보 조회용
+# - checks: 테스트 결과를 GitHub Checks에 표시하기 위해 필요
+# - pull-requests: PR 화면에 테스트 결과를 표시하기 위해 필요
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+
+# 같은 브랜치에서 CI가 중복 실행되면 이전 실행을 취소
+# 예: PR에 커밋을 여러 번 push하면 이전 CI는 취소하고 최신 커밋 기준으로만 실행
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # 실행환경
+
+    # 모든 run 명령어를 backend 디렉토리 기준으로 실행
+    # 현재 프로젝트는 gradlew가 backend 하위에 있기 때문에 필요
+    defaults:
+      run:
+        working-directory: ./backend
+
+    # 테스트 실행에 필요한 외부 의존 서비스
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: rungo
+        ports:
+          - 13306:3306
+        # MySQL 컨테이너가 정상 실행될 때까지 health check
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        # Redis 컨테이너가 정상 실행될 때까지 health check
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    # 테스트 실행에 필요한 환경변수
+    env:
+      # JWT 테스트용 secret key
+      JWT_SECRET: test-secret-key-at-least-32-bytes-long
+
+      # GitHub Actions MySQL service 접속 정보
+      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:13306/rungo
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+      # GitHub Actions Redis service 접속 정보
+      SPRING_DATA_REDIS_HOST: localhost
+      SPRING_DATA_REDIS_PORT: 6379
+
+      # 메일 관련 테스트용 값
+      # 실제 SMTP 계정을 사용하지 않도록 더미 값 주입
+      SPRING_MAIL_USERNAME: test@example.com
+      SPRING_MAIL_PASSWORD: test-password
+      APP_MAIL_ENABLED: false
+
+      # 프론트엔드 리다이렉트/쿠키 관련 테스트용 URL
+      APP_FRONTEND_URL: http://localhost:3000
+
+      # 토큰 재발급 락 테스트용 설정값
+      LOCK_REISSUE_WAIT_TIME: 1
+      LOCK_REISSUE_LEASE_TIME: 2
+
+      # 마라톤 생성/검증 테스트용 정책값
+      MARATHON_MIN_DAYS_START_TO_END: 1
+      MARATHON_MIN_DAYS_END_TO_EVENT: 1
+
+    steps:
+      # 저장소 코드 가져오기
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # JDK 21 설치
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      # Gradle 캐싱 및 실행 환경 설정
+      # 의존성 캐싱으로 이후 CI 실행 속도 개선
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # gradlew 실행 권한 부여
+      # 리눅스 환경에서는 실행 권한이 없으면 ./gradlew 실행 실패 가능
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      # 전체 빌드 및 테스트 실행
+      # 테스트가 하나라도 실패하면 CI 실패 처리
+      - name: Build with Gradle
+        run: ./gradlew clean build
+
+      # Gradle HTML 테스트 리포트 업로드
+      # 테스트 실패 시에도 리포트를 확인할 수 있도록 취소되지 않은 경우 항상 실행
+      - name: Upload test report artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: backend/build/reports/tests/test
+
+      # JUnit XML 기반 테스트 결과를 GitHub Checks에 표시
+      # PR 화면에서 어떤 테스트가 실패했는지 확인하기 쉽게 하기 위함
+      - name: Publish unit test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@v3
+        with:
+          name: Gradle Test Results
+          path: backend/build/test-results/test/*.xml
+          reporter: java-junit
