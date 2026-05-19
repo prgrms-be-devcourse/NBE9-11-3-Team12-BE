@@ -1,12 +1,12 @@
 package com.rungo.api.global.infrastructure.mail.repository
 
+import EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
-import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface EmailOutboxRepository : JpaRepository<EmailOutbox, Long> {
 
-    fun findTop50ByStatusInOrderByCreatedAtAsc(
-        statuses: Collection<EmailOutboxStatus>
+    fun findTop50ByStatusOrderByCreatedAtAsc(
+        status: EmailOutboxStatus
     ): List<EmailOutbox>
 }

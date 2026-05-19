@@ -1,13 +1,7 @@
 package com.rungo.api.global.infrastructure.mail.entity
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import EmailOutboxStatus
+import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
@@ -18,38 +12,41 @@ class EmailOutbox protected constructor() {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L
 
-    @Column(name = "recipient", nullable = false)
+    @Column(nullable = false)
     lateinit var recipient: String
         protected set
 
-    @Column(name = "subject", nullable = false)
+    @Column(nullable = false)
     lateinit var subject: String
         protected set
 
-    @Column(name = "body", nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     lateinit var body: String
         protected set
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(nullable = false)
     var status: EmailOutboxStatus = EmailOutboxStatus.PENDING
         protected set
 
-    @Column(name = "retry_count", nullable = false)
+    @Column(nullable = false)
     var retryCount: Int = 0
         protected set
 
-    @Column(name = "last_error_message", length = 255)
+    @Column(length = 255)
     var lastErrorMessage: String? = null
         protected set
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now()
         protected set
 
-    @Column(name = "sent_at")
     var sentAt: LocalDateTime? = null
         protected set
+
+    fun markAsProcessing() {
+        status = EmailOutboxStatus.PROCESSING
+    }
 
     fun markAsSuccess() {
         status = EmailOutboxStatus.SUCCESS
@@ -59,15 +56,19 @@ class EmailOutbox protected constructor() {
 
     fun markAsFailed(errorMessage: String?) {
         retryCount += 1
+
         lastErrorMessage = errorMessage?.take(MAX_ERROR_MESSAGE_LENGTH)
-        status = if (retryCount >= MAX_RETRY_COUNT) {
-            EmailOutboxStatus.EXHAUSTED
-        } else {
-            EmailOutboxStatus.FAILED
-        }
+
+        status =
+            if (retryCount >= MAX_RETRY_COUNT) {
+                EmailOutboxStatus.EXHAUSTED
+            } else {
+                EmailOutboxStatus.FAILED
+            }
     }
 
     companion object {
+
         private const val MAX_RETRY_COUNT = 3
         private const val MAX_ERROR_MESSAGE_LENGTH = 255
 

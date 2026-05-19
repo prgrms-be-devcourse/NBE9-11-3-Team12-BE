@@ -19,9 +19,13 @@ class EmailOutboxProcessor(
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun process(outboxId: Long) {
-        val outbox = emailOutboxRepository.findByIdOrNull(outboxId) ?: return
+
+        val outbox =
+            emailOutboxRepository.findByIdOrNull(outboxId)
+                ?: return
 
         runCatching {
+
             emailService.send(
                 EmailMessage(
                     to = outbox.recipient,
@@ -37,7 +41,9 @@ class EmailOutboxProcessor(
                 outbox.id,
                 outbox.recipient,
             )
+
         }.onFailure { exception ->
+
             outbox.markAsFailed(exception.message)
 
             log.warn(
