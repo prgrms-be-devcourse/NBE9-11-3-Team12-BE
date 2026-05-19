@@ -17,19 +17,14 @@ class EmailBatchScheduler(
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
-
-    private val executor =
-        Executors.newFixedThreadPool(MAIL_BATCH_THREAD_COUNT)
+    private val executor = Executors.newFixedThreadPool(MAIL_BATCH_THREAD_COUNT)
 
     @Scheduled(fixedDelay = MAIL_BATCH_FIXED_DELAY)
     @Transactional
     fun sendPendingEmails() {
-
-        val targetOutboxes =
-            emailOutboxRepository
-                .findTop50ByStatusOrderByCreatedAtAsc(
-                    EmailOutboxStatus.PENDING
-                )
+        val targetOutboxes = emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
+            RETRYABLE_STATUSES
+        )
 
         if (targetOutboxes.isEmpty()) {
             return
@@ -39,33 +34,23 @@ class EmailBatchScheduler(
             it.markAsProcessing()
         }
 
-        log.info(
-            "이메일 배치 발송 시작 - 대상 수: {}",
-            targetOutboxes.size
-        )
+        log.info("이메일 배치 발송 시작 - 대상 수: {}", targetOutboxes.size)
 
-        val futures =
-            targetOutboxes.map { outbox ->
+        val futures = targetOutboxes.map { outbox ->
+            CompletableFuture.runAsync({
+                runCatching {
+                    emailOutboxProcessor.process(outbox.id)
+                }.onFailure { exception ->
+                    log.error(
+                        "이메일 배치 처리 중 예외 발생 [outboxId: {}]",
+                        outbox.id,
+                        exception,
+                    )
+                }
+            }, executor)
+        }
 
-                CompletableFuture.runAsync({
-
-                    runCatching {
-                        emailOutboxProcessor.process(outbox.id)
-                    }.onFailure { exception ->
-
-                        log.error(
-                            "이메일 배치 처리 중 예외 발생 [outboxId: {}]",
-                            outbox.id,
-                            exception,
-                        )
-                    }
-
-                }, executor)
-            }
-
-        CompletableFuture
-            .allOf(*futures.toTypedArray())
-            .join()
+        CompletableFuture.allOf(*futures.toTypedArray()).join()
 
         log.info("이메일 배치 발송 종료")
     }
@@ -77,8 +62,12 @@ class EmailBatchScheduler(
     }
 
     companion object {
-
         private const val MAIL_BATCH_THREAD_COUNT = 5
         private const val MAIL_BATCH_FIXED_DELAY = 60_000L
+
+        private val RETRYABLE_STATUSES = listOf(
+            EmailOutboxStatus.PENDING,
+            EmailOutboxStatus.FAILED,
+        )
     }
 }
