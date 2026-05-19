@@ -55,7 +55,7 @@ jobs:
       redis:
         image: redis:7
         ports:
-          - 6379:6379
+          - 16379:6379
         # Redis 컨테이너가 정상 실행될 때까지 health check
         options: >-
           --health-cmd="redis-cli ping"
@@ -75,7 +75,7 @@ jobs:
 
       # GitHub Actions Redis service 접속 정보
       SPRING_DATA_REDIS_HOST: localhost
-      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PORT: 16379
 
       # 메일 관련 테스트용 값
       # 실제 SMTP 계정을 사용하지 않도록 더미 값 주입
