@@ -81,7 +81,7 @@ internal class MarathonServiceIntegrationTest {
         assertThat(savedMarathon.status).isEqualTo(MarathonStatus.CANCELED)
 
         Mockito.verify(emailService, Mockito.timeout(2_000).times(2))
-            .send(ArgumentMatchers.any(EmailMessage::class.java))
+            .send(anyEmailMessage())
     }
 
     @Test
@@ -89,7 +89,7 @@ internal class MarathonServiceIntegrationTest {
     fun cancelMarathonEmailExceptionIsolationTest() {
         Mockito.doThrow(RuntimeException("SMTP 서버 강제 다운"))
             .`when`(emailService)
-            .send(ArgumentMatchers.any(EmailMessage::class.java))
+            .send(anyEmailMessage())
 
         val organizer = saveOrganizer("organizer-fail@test.com")
         val participant1 = saveParticipant("fail-user1@test.com")
@@ -108,7 +108,7 @@ internal class MarathonServiceIntegrationTest {
         assertThat(savedMarathon.status).isEqualTo(MarathonStatus.CANCELED)
 
         Mockito.verify(emailService, Mockito.timeout(2_000).atLeastOnce())
-            .send(ArgumentMatchers.any(EmailMessage::class.java))
+            .send(anyEmailMessage())
     }
 
     private fun saveOrganizer(email: String): Users =
@@ -179,4 +179,9 @@ internal class MarathonServiceIntegrationTest {
                 true,
             )
         )
+
+    private fun anyEmailMessage(): EmailMessage {
+        ArgumentMatchers.any(EmailMessage::class.java)
+        return EmailMessage("", "", "")
+    }
 }

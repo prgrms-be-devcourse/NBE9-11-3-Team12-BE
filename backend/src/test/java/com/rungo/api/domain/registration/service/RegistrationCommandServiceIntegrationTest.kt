@@ -19,10 +19,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.doThrow
-import org.mockito.Mockito.timeout
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
@@ -72,7 +69,7 @@ class RegistrationCommandServiceIntegrationTest {
     fun email_exception_isolation_test() {
         doThrow(RuntimeException("SMTP 서버 강제 다운"))
             .`when`(emailService)
-            .send(any(EmailMessage::class.java))
+            .send(anyEmailMessage())
 
         val organizer = saveOrganizer("organizer@test.com")
         val participant = saveParticipant("participant@test.com")
@@ -87,7 +84,7 @@ class RegistrationCommandServiceIntegrationTest {
         assertThat(findCourse(course.id).currentCount).isEqualTo(1)
 
         verify(emailService, timeout(2000).atLeastOnce())
-            .send(any(EmailMessage::class.java))
+            .send(anyEmailMessage())
     }
 
     @Test
@@ -104,7 +101,7 @@ class RegistrationCommandServiceIntegrationTest {
         assertThat(findCourse(course.id).currentCount).isEqualTo(1)
 
         verify(emailService, timeout(2000).times(1))
-            .send(any(EmailMessage::class.java))
+            .send(anyEmailMessage())
     }
 
     @Test
@@ -234,4 +231,9 @@ class RegistrationCommandServiceIntegrationTest {
     private fun containsConstraintName(throwable: Throwable?, constraintName: String): Boolean =
         generateSequence(throwable) { it.cause }
             .any { it.message?.contains(constraintName) == true }
+
+    private fun anyEmailMessage(): EmailMessage {
+        any(EmailMessage::class.java)
+        return EmailMessage("", "", "")
+    }
 }
