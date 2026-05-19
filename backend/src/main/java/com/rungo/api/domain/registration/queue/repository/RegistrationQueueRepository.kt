@@ -1,5 +1,6 @@
 package com.rungo.api.domain.registration.queue.repository
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.rungo.api.domain.registration.queue.RegistrationQueueKeyGenerator
 import com.rungo.api.domain.registration.queue.config.RegistrationQueueProperties
 import com.rungo.api.domain.registration.queue.dto.RegistrationQueuePayload
@@ -7,17 +8,21 @@ import com.rungo.api.domain.registration.queue.dto.RegistrationQueueResult
 import org.redisson.api.RBucket
 import org.redisson.api.RScoredSortedSet
 import org.redisson.api.RSet
+import org.redisson.api.RSetCache
 import org.redisson.api.RedissonClient
 import org.redisson.client.codec.StringCodec
-import org.redisson.codec.JsonJacksonCodec
+import org.redisson.codec.TypedJsonJacksonCodec
 import org.springframework.stereotype.Repository
 import java.time.Duration
 
 @Repository
 class RegistrationQueueRepository(
     private val redissonClient: RedissonClient,
-    private val properties: RegistrationQueueProperties
+    private val properties: RegistrationQueueProperties,
+    objectMapper: ObjectMapper
 ) {
+    private val payloadCodec = TypedJsonJacksonCodec(RegistrationQueuePayload::class.java, objectMapper)
+    private val resultCodec = TypedJsonJacksonCodec(RegistrationQueueResult::class.java, objectMapper)
 
     fun addActiveCourse(courseId: Long): Boolean = activeCoursesSet().add(courseId.toString())
 
@@ -65,11 +70,13 @@ class RegistrationQueueRepository(
     fun deleteResult(requestId: String): Boolean = resultBucket(requestId).delete()
 
     fun tryMarkProcessing(requestId: String): Boolean =
-        processingBucket(requestId).setIfAbsent(PROCESSING_VALUE, Duration.ofSeconds(properties.processingTtl))
+        processingRequestsSet().addIfAbsent(Duration.ofSeconds(properties.processingTtl), requestId)
 
-    fun isProcessing(requestId: String): Boolean = processingBucket(requestId).isExists
+    fun isProcessing(requestId: String): Boolean = processingRequestsSet().contains(requestId)
 
-    fun deleteProcessing(requestId: String): Boolean = processingBucket(requestId).delete()
+    fun deleteProcessing(requestId: String): Boolean = processingRequestsSet().remove(requestId)
+
+    fun processingCount(): Int = processingRequestsSet().size
 
     fun trySetDedupe(userId: Long, marathonId: Long, requestId: String, ttlMinutes: Long): Boolean =
         dedupeBucket(userId, marathonId).setIfAbsent(requestId, Duration.ofMinutes(ttlMinutes))
@@ -90,22 +97,20 @@ class RegistrationQueueRepository(
         )
 
     private fun payloadBucket(requestId: String): RBucket<RegistrationQueuePayload> =
-        redissonClient.getBucket(RegistrationQueueKeyGenerator.payload(requestId), JSON_CODEC)
+        redissonClient.getBucket(RegistrationQueueKeyGenerator.payload(requestId), payloadCodec)
 
     private fun resultBucket(requestId: String): RBucket<RegistrationQueueResult> =
-        redissonClient.getBucket(RegistrationQueueKeyGenerator.result(requestId), JSON_CODEC)
+        redissonClient.getBucket(RegistrationQueueKeyGenerator.result(requestId), resultCodec)
 
-    private fun processingBucket(requestId: String): RBucket<String> =
-        redissonClient.getBucket(RegistrationQueueKeyGenerator.processing(requestId), StringCodec.INSTANCE)
+    private fun processingRequestsSet(): RSetCache<String> =
+        redissonClient.getSetCache(
+            RegistrationQueueKeyGenerator.processingRequests(),
+            StringCodec.INSTANCE
+        )
 
     private fun dedupeBucket(userId: Long, marathonId: Long): RBucket<String> =
         redissonClient.getBucket(
             RegistrationQueueKeyGenerator.dedupe(userId, marathonId),
             StringCodec.INSTANCE
         )
-
-    companion object {
-        private const val PROCESSING_VALUE = "PROCESSING"
-        private val JSON_CODEC = JsonJacksonCodec()
-    }
 }
