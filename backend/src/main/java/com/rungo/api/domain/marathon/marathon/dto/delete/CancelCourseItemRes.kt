@@ -14,7 +14,6 @@ data class CancelCourseItemRes(
 
 ) {
     companion object {
-        @JvmStatic
         fun from(course: Course) = CancelCourseItemRes(
             id = course.id,
             courseType = course.courseType

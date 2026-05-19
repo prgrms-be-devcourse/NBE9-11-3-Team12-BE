@@ -15,56 +15,45 @@ data class CreateMarathonReq(
 
     @field:Schema(description = "대회명", example = "2026 서울 마라톤")
     @field:NotBlank(message = "대회명은 필수입니다.")
-    @JvmField
     val title: String,
 
     @field:Schema(description = "지역", example = "서울")
     @field:NotBlank(message = "지역은 필수입니다.")
-    @JvmField
     val region: String,
 
     @field:Schema(description = "상세주소", example = "서울특별시 송파구 올림픽로 424")
     @field:NotBlank(message = "상세주소는 필수입니다.")
-    @JvmField
     val detailedAddress: String,
 
     @field:Schema(description = "대회 일자", example = "2020-02-02")
-    @JvmField
     val eventDate: LocalDate,
 
     @field:Schema(description = "포스터 이미지", type = "string", format = "binary")
-    @JvmField
     val posterImage: MultipartFile?,
 
     @field:Schema(description = "접수 시작 일시", example = "2020-02-02T02:02:02")
-    @JvmField
     val registrationStartAt: LocalDateTime,
 
     @field:Schema(description = "접수 종료 일시", example = "2020-02-02T02:02:02")
-    @JvmField
     val registrationEndAt: LocalDateTime,
 
     @field:Schema(description = "코스 목록")
     @field:Valid
     @field:NotEmpty(message = "코스는 최소 1개 이상 등록해야 합니다.")
-    @JvmField
     val courses: List<CreateCourseItemReq>
 ) {
     data class CreateCourseItemReq(
 
         @field:Schema(description = "코스 타입", example = "10KM")
         @field:NotBlank(message = "코스 타입은 필수입니다.")
-        @JvmField
         val courseType: String,
 
         @field:Schema(description = "참가비", example = "50000")
         @field:Min(value = 0, message = "참가비는 0 이상이어야 합니다.")
-        @JvmField
         val price: BigDecimal,
 
         @field:Schema(description = "정원", example = "300")
         @field:Min(value = 1, message = "정원은 1 이상이어야 합니다.")
-        @JvmField
         val capacity: Int
     )
 }
