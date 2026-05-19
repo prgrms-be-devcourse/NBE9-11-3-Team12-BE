@@ -4,7 +4,6 @@ import com.rungo.api.domain.registration.entity.Registration
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "접수 취소 응답 DTO")
-@JvmRecord
 data class CancelRegistrationRes(
     @field:Schema(description = "접수 ID", example = "10")
     val registrationId: Long,
@@ -25,7 +24,6 @@ data class CancelRegistrationRes(
     val status: String,
 ) {
     companion object {
-        @JvmStatic
         fun from(registration: Registration) = CancelRegistrationRes(
             registrationId = registration.id,
             marathonId = registration.marathon.id,
