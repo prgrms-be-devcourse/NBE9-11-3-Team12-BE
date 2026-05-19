@@ -161,7 +161,7 @@ class OrganizerApplicationServiceTest {
             )
         }
 
-        assertEquals(ErrorCode.INVALID_INPUT_VALUE, exception.errorCode)
+        assertEquals(ErrorCode.ALREADY_PENDING_APPLICATION, exception.errorCode)
     }
 
     private fun createUser(
