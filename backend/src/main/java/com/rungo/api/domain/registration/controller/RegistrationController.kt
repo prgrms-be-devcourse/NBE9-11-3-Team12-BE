@@ -4,6 +4,7 @@ import com.rungo.api.domain.registration.dto.CreateRegistrationReq
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes
 import com.rungo.api.domain.registration.dto.MyRegistrationRes
 import com.rungo.api.domain.registration.enumtype.MyRegistrationStatusFilter
+import com.rungo.api.domain.registration.queue.service.RegistrationQueueService
 import com.rungo.api.domain.registration.service.RegistrationService
 import com.rungo.api.global.response.ApiResponse
 import com.rungo.api.global.security.SecurityUser
@@ -29,6 +30,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 @Tag(name = "Registration", description = "사용자 접수 API")
 @SecurityRequirement(name = "accessTokenCookie")
 class RegistrationController(
+    private val registrationQueueService: RegistrationQueueService,
     private val registrationService: RegistrationService,
 ) {
     @PostMapping
@@ -44,7 +46,7 @@ class RegistrationController(
         @AuthenticationPrincipal user: SecurityUser,
         @Valid @RequestBody request: CreateRegistrationReq,
     ): ResponseEntity<ApiResponse<CreateRegistrationRes>> {
-        val createRegistrationRes = registrationService.create(user.id, request)
+        val createRegistrationRes = registrationQueueService.create(user.id, request)
 
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.created("접수가 완료되었습니다.", createRegistrationRes))
