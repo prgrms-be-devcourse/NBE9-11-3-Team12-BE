@@ -8,7 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "organizer_approvals")
+@Table(name = "organizer_application")
 @EntityListeners(AuditingEntityListener::class)
 class OrganizerApplication protected constructor() {
 
