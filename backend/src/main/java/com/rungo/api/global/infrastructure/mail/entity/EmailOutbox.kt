@@ -52,15 +52,15 @@ class EmailOutbox protected constructor() {
         protected set
 
     fun markAsSuccess() {
-        this.status = EmailOutboxStatus.SUCCESS
-        this.sentAt = LocalDateTime.now()
-        this.lastErrorMessage = null
+        status = EmailOutboxStatus.SUCCESS
+        sentAt = LocalDateTime.now()
+        lastErrorMessage = null
     }
 
     fun markAsFailed(errorMessage: String?) {
-        this.retryCount += 1
-        this.lastErrorMessage = errorMessage?.take(255)
-        this.status = if (retryCount >= MAX_RETRY_COUNT) {
+        retryCount += 1
+        lastErrorMessage = errorMessage?.take(MAX_ERROR_MESSAGE_LENGTH)
+        status = if (retryCount >= MAX_RETRY_COUNT) {
             EmailOutboxStatus.EXHAUSTED
         } else {
             EmailOutboxStatus.FAILED
@@ -69,20 +69,20 @@ class EmailOutbox protected constructor() {
 
     companion object {
         private const val MAX_RETRY_COUNT = 3
+        private const val MAX_ERROR_MESSAGE_LENGTH = 255
 
         fun create(
             recipient: String,
             subject: String,
-            body: String
-        ): EmailOutbox {
-            val outbox = EmailOutbox()
-            outbox.recipient = recipient
-            outbox.subject = subject
-            outbox.body = body
-            outbox.status = EmailOutboxStatus.PENDING
-            outbox.retryCount = 0
-            outbox.createdAt = LocalDateTime.now()
-            return outbox
-        }
+            body: String,
+        ): EmailOutbox =
+            EmailOutbox().apply {
+                this.recipient = recipient
+                this.subject = subject
+                this.body = body
+                this.status = EmailOutboxStatus.PENDING
+                this.retryCount = 0
+                this.createdAt = LocalDateTime.now()
+            }
     }
 }
