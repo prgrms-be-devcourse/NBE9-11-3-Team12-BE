@@ -19,6 +19,8 @@ enum class ErrorCode(
     ALREADY_ORGANIZER(HttpStatus.BAD_REQUEST, "이미 주최자 권한을 가진 회원입니다."),
     PROFILE_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "필수 프로필 정보가 누락되었습니다."),
 
+    //유저, 권한 신청
+    ALREADY_PENDING_APPLICATION(HttpStatus.BAD_REQUEST, "이미 대기 중인 주최자 권한 신청이 존재합니다."),
     // 토큰
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 리프레시 토큰입니다."),

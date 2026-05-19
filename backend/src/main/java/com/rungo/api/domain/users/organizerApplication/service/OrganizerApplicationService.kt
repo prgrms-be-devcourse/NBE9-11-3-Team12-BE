@@ -37,7 +37,7 @@ class OrganizerApplicationService(
         )
 
         if (hasPendingApplication) {
-            throw CustomException(ErrorCode.INVALID_INPUT_VALUE)
+            throw CustomException(ErrorCode.ALREADY_PENDING_APPLICATION)
         }
 
         val application = OrganizerApplication.create(
