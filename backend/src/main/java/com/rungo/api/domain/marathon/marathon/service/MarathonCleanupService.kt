@@ -18,15 +18,10 @@ class MarathonCleanupService(
     fun cleanup() {
         val now = LocalDate.now()
 
-        // 대회 개최일이 3년 이상 지난 대회들의 ID 조회 후, 해당 대회들의 참가 취소 이력 삭제
-        val threeYearsAgoIds = marathonRepository.findIdsByEventDateBefore(now.minusYears(3))
-        if (threeYearsAgoIds.isNotEmpty()) {
-            registrationCancelHistoryRepository.deleteAllByMarathonIdIn(threeYearsAgoIds)
-        }
-
-        // 5년 이상 지난 대회들의 ID 조회 후, 해당 대회들의 참가 신청 내역 삭제
+        // 5년 이상 지난 대회들의 ID 조회 후, 해당 대회들의 참가 취소 이력 및 참가 신청 내역 삭제
         val fiveYearsAgoIds = marathonRepository.findIdsByEventDateBefore(now.minusYears(5))
         if (fiveYearsAgoIds.isNotEmpty()) {
+            registrationCancelHistoryRepository.deleteAllByMarathonIdIn(fiveYearsAgoIds)
             registrationRepository.deleteAllByMarathonIdIn(fiveYearsAgoIds)
         }
 
