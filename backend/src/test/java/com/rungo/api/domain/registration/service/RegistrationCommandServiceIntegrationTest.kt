@@ -1,6 +1,5 @@
 package com.rungo.api.domain.registration.service
 
-import EmailOutboxStatus
 import com.rungo.api.domain.auth.repository.UserAuthRepository
 import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.course.repository.CourseRepository
@@ -12,6 +11,7 @@ import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Gender
 import com.rungo.api.domain.users.repository.UserRepository
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -90,10 +90,7 @@ class RegistrationCommandServiceIntegrationTest {
         assertThat(outboxes[0].subject)
             .contains("참가 접수 완료")
         assertThat(outboxes[0].status)
-            .isIn(
-                EmailOutboxStatus.PENDING,
-                EmailOutboxStatus.PROCESSING,
-            )
+            .isEqualTo(EmailOutboxStatus.PENDING)
     }
 
     @Test

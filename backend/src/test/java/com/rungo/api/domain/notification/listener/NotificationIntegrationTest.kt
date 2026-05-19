@@ -1,8 +1,9 @@
 package com.rungo.api.domain.notification.listener
 
-import EmailOutboxStatus
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent
 import com.rungo.api.domain.notification.event.RegistrationCompletedEvent
+import com.rungo.api.global.infrastructure.mail.batch.EmailBatchScheduler
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.transaction.TestTransaction
 import org.springframework.transaction.annotation.Transactional
 
@@ -22,6 +24,9 @@ class NotificationIntegrationTest {
 
     @Autowired
     private lateinit var emailOutboxRepository: EmailOutboxRepository
+
+    @MockitoBean
+    private lateinit var emailBatchScheduler: EmailBatchScheduler
 
     @AfterEach
     fun tearDown() {
@@ -53,10 +58,7 @@ class NotificationIntegrationTest {
         assertThat(outbox.subject).contains("참가 접수 완료")
         assertThat(outbox.body).contains("통합테스트 마라톤")
         assertThat(outbox.body).contains("10km")
-        assertThat(outbox.status).isIn(
-            EmailOutboxStatus.PENDING,
-            EmailOutboxStatus.PROCESSING,
-        )
+        assertThat(outbox.status).isEqualTo(EmailOutboxStatus.PENDING)
         assertThat(outbox.retryCount).isEqualTo(0)
     }
 
@@ -96,37 +98,28 @@ class NotificationIntegrationTest {
         TestTransaction.flagForCommit()
         TestTransaction.end()
 
-        val outboxes =
-            emailOutboxRepository.findAll()
-                .sortedBy { it.recipient }
+        assertThat(emailOutboxRepository.count()).isEqualTo(beforeCount + 2)
 
-        assertThat(outboxes).hasSize(beforeCount.toInt() + 2)
-
-        val createdOutboxes =
-            outboxes.filter {
+        val createdOutboxes = emailOutboxRepository.findAll()
+            .filter {
                 it.recipient in listOf(
                     "user1@test.com",
-                    "user2@test.com",
+                    "user2@test.com"
                 )
-            }.sortedBy { it.recipient }
+            }
+            .sortedBy { it.recipient }
 
         assertThat(createdOutboxes).hasSize(2)
 
         assertThat(createdOutboxes[0].recipient).isEqualTo("user1@test.com")
         assertThat(createdOutboxes[0].subject).contains("대회 취소")
         assertThat(createdOutboxes[0].body).contains("서울 마라톤")
-        assertThat(createdOutboxes[0].status).isIn(
-            EmailOutboxStatus.PENDING,
-            EmailOutboxStatus.PROCESSING,
-        )
+        assertThat(createdOutboxes[0].status).isEqualTo(EmailOutboxStatus.PENDING)
 
         assertThat(createdOutboxes[1].recipient).isEqualTo("user2@test.com")
         assertThat(createdOutboxes[1].subject).contains("대회 취소")
         assertThat(createdOutboxes[1].body).contains("서울 마라톤")
-        assertThat(createdOutboxes[1].status).isIn(
-            EmailOutboxStatus.PENDING,
-            EmailOutboxStatus.PROCESSING,
-        )
+        assertThat(createdOutboxes[1].status).isEqualTo(EmailOutboxStatus.PENDING)
     }
 
     @Test

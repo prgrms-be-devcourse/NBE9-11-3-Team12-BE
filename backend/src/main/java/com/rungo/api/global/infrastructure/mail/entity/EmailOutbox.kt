@@ -1,6 +1,5 @@
 package com.rungo.api.global.infrastructure.mail.entity
 
-import EmailOutboxStatus
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -56,19 +55,16 @@ class EmailOutbox protected constructor() {
 
     fun markAsFailed(errorMessage: String?) {
         retryCount += 1
-
         lastErrorMessage = errorMessage?.take(MAX_ERROR_MESSAGE_LENGTH)
 
-        status =
-            if (retryCount >= MAX_RETRY_COUNT) {
-                EmailOutboxStatus.EXHAUSTED
-            } else {
-                EmailOutboxStatus.FAILED
-            }
+        status = if (retryCount >= MAX_RETRY_COUNT) {
+            EmailOutboxStatus.EXHAUSTED
+        } else {
+            EmailOutboxStatus.FAILED
+        }
     }
 
     companion object {
-
         private const val MAX_RETRY_COUNT = 3
         private const val MAX_ERROR_MESSAGE_LENGTH = 255
 

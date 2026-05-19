@@ -1,6 +1,5 @@
 package com.rungo.api.domain.marathon.marathon.service
 
-import EmailOutboxStatus
 import com.rungo.api.domain.auth.repository.UserAuthRepository
 import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.course.repository.CourseRepository
@@ -12,6 +11,7 @@ import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Gender
 import com.rungo.api.domain.users.repository.UserRepository
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -98,20 +98,15 @@ internal class MarathonServiceIntegrationTest {
         assertThat(outboxes[0].subject)
             .contains("대회 취소")
         assertThat(outboxes[0].status)
-            .isIn(
-                EmailOutboxStatus.PENDING,
-                EmailOutboxStatus.PROCESSING,
-            )
+            .isEqualTo(EmailOutboxStatus.PENDING)
 
         assertThat(outboxes[1].recipient)
             .isEqualTo("user2@test.com")
         assertThat(outboxes[1].subject)
             .contains("대회 취소")
         assertThat(outboxes[1].status)
-            .isIn(
-                EmailOutboxStatus.PENDING,
-                EmailOutboxStatus.PROCESSING,
-            )
+            .isEqualTo(EmailOutboxStatus.PENDING)
+
     }
 
     @Test

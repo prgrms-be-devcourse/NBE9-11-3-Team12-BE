@@ -1,11 +1,11 @@
 package com.rungo.api.domain.notification.listener
 
-import EmailOutboxStatus
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent
 import com.rungo.api.domain.notification.event.RegistrationCompletedEvent
 import com.rungo.api.domain.notification.support.NotificationEmailFactory
 import com.rungo.api.global.infrastructure.mail.EmailMessage
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName

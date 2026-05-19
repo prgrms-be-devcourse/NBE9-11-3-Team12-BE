@@ -1,7 +1,7 @@
 package com.rungo.api.global.infrastructure.mail.repository
 
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
-import EmailOutboxStatus
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface EmailOutboxRepository : JpaRepository<EmailOutbox, Long> {

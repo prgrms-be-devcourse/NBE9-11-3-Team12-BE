@@ -1,7 +1,7 @@
 package com.rungo.api.global.infrastructure.mail.batch
 
-import EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
@@ -34,55 +34,103 @@ class EmailBatchSchedulerTest {
     }
 
     @Test
-    @DisplayName("PENDING 상태의 이메일이 없으면 Processor를 호출하지 않는다")
+    @DisplayName("처리 대상 이메일이 없으면 Processor를 호출하지 않는다")
     fun sendPendingEmails_empty() {
         given(
-            emailOutboxRepository.findTop50ByStatusOrderByCreatedAtAsc(
-                EmailOutboxStatus.PENDING
+            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
+                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
             )
         ).willReturn(emptyList())
 
         emailBatchScheduler.sendPendingEmails()
 
-        verify(emailOutboxProcessor, never()).process(1L)
+        verify(emailOutboxProcessor, never()).process(anyLong())
     }
 
     @Test
-    @DisplayName("PENDING 상태의 이메일을 조회하면 PROCESSING으로 선점 후 Processor에 위임한다")
-    fun sendPendingEmails_success() {
-        val outbox1 = createOutbox(1L)
-        val outbox2 = createOutbox(2L)
-        val outbox3 = createOutbox(3L)
+    @DisplayName("PENDING 이메일을 PROCESSING으로 변경 후 처리한다")
+    fun sendPendingEmails_pending_success() {
+        val outbox = createOutbox(1L)
+        val targetOutboxes = listOf(outbox)
 
         given(
-            emailOutboxRepository.findTop50ByStatusOrderByCreatedAtAsc(
-                EmailOutboxStatus.PENDING
+            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
+                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
             )
-        ).willReturn(listOf(outbox1, outbox2, outbox3))
+        ).willReturn(targetOutboxes)
 
         emailBatchScheduler.sendPendingEmails()
 
-        assertEquals(EmailOutboxStatus.PROCESSING, outbox1.status)
-        assertEquals(EmailOutboxStatus.PROCESSING, outbox2.status)
-        assertEquals(EmailOutboxStatus.PROCESSING, outbox3.status)
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox.status)
 
+        verify(emailOutboxRepository).saveAllAndFlush(targetOutboxes)
         verify(emailOutboxProcessor).process(1L)
-        verify(emailOutboxProcessor).process(2L)
-        verify(emailOutboxProcessor).process(3L)
     }
 
     @Test
-    @DisplayName("일부 이메일 처리 중 예외가 발생해도 스케줄러 전체는 중단되지 않는다")
+    @DisplayName("FAILED 이메일도 재처리한다")
+    fun sendPendingEmails_failed_retry() {
+        val outbox = createOutbox(1L)
+        outbox.markAsFailed("SMTP ERROR")
+
+        val targetOutboxes = listOf(outbox)
+
+        given(
+            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
+                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
+            )
+        ).willReturn(targetOutboxes)
+
+        emailBatchScheduler.sendPendingEmails()
+
+        assertEquals(EmailOutboxStatus.PROCESSING, outbox.status)
+
+        verify(emailOutboxRepository).saveAllAndFlush(targetOutboxes)
+        verify(emailOutboxProcessor).process(1L)
+    }
+
+    @Test
+    @DisplayName("PROCESSING 상태 이메일은 Scheduler 조회 대상에서 제외된다")
+    fun sendPendingEmails_processing_excluded() {
+        given(
+            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
+                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
+            )
+        ).willReturn(emptyList())
+
+        emailBatchScheduler.sendPendingEmails()
+
+        verify(emailOutboxProcessor, never()).process(anyLong())
+    }
+
+    @Test
+    @DisplayName("EXHAUSTED 상태 이메일은 Scheduler 조회 대상에서 제외된다")
+    fun sendPendingEmails_exhausted_excluded() {
+        given(
+            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
+                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
+            )
+        ).willReturn(emptyList())
+
+        emailBatchScheduler.sendPendingEmails()
+
+        verify(emailOutboxProcessor, never()).process(anyLong())
+    }
+
+    @Test
+    @DisplayName("일부 이메일 처리 중 예외가 발생해도 Scheduler 전체는 중단되지 않는다")
     fun sendPendingEmails_processor_exception_isolated() {
         val outbox1 = createOutbox(1L)
         val outbox2 = createOutbox(2L)
         val outbox3 = createOutbox(3L)
 
+        val targetOutboxes = listOf(outbox1, outbox2, outbox3)
+
         given(
-            emailOutboxRepository.findTop50ByStatusOrderByCreatedAtAsc(
-                EmailOutboxStatus.PENDING
+            emailOutboxRepository.findTop50ByStatusInOrderByCreatedAtAsc(
+                listOf(EmailOutboxStatus.PENDING, EmailOutboxStatus.FAILED)
             )
-        ).willReturn(listOf(outbox1, outbox2, outbox3))
+        ).willReturn(targetOutboxes)
 
         doThrow(RuntimeException("processor error"))
             .`when`(emailOutboxProcessor)
@@ -96,6 +144,7 @@ class EmailBatchSchedulerTest {
         assertEquals(EmailOutboxStatus.PROCESSING, outbox2.status)
         assertEquals(EmailOutboxStatus.PROCESSING, outbox3.status)
 
+        verify(emailOutboxRepository).saveAllAndFlush(targetOutboxes)
         verify(emailOutboxProcessor).process(1L)
         verify(emailOutboxProcessor).process(2L)
         verify(emailOutboxProcessor).process(3L)
@@ -109,7 +158,6 @@ class EmailBatchSchedulerTest {
         )
 
         ReflectionTestUtils.setField(outbox, "id", id)
-
         return outbox
     }
 }

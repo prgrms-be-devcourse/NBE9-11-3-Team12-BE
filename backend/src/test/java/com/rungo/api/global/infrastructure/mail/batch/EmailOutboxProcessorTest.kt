@@ -1,9 +1,9 @@
 package com.rungo.api.global.infrastructure.mail.batch
 
-import EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.EmailMessage
 import com.rungo.api.global.infrastructure.mail.EmailService
 import com.rungo.api.global.infrastructure.mail.entity.EmailOutbox
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
 import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
@@ -32,12 +32,7 @@ class EmailOutboxProcessorTest {
     @Test
     @DisplayName("PROCESSING 상태의 이메일 발송에 성공하면 SUCCESS 상태로 변경된다")
     fun process_success() {
-        val outbox = EmailOutbox.create(
-            recipient = "user@test.com",
-            subject = "접수 완료",
-            body = "접수가 완료되었습니다."
-        )
-        outbox.markAsProcessing()
+        val outbox = createProcessingOutbox()
 
         given(emailOutboxRepository.findById(1L))
             .willReturn(Optional.of(outbox))
@@ -55,12 +50,7 @@ class EmailOutboxProcessorTest {
     @Test
     @DisplayName("이메일 발송에 실패하면 FAILED 상태로 변경되고 retryCount가 증가한다")
     fun process_fail() {
-        val outbox = EmailOutbox.create(
-            recipient = "user@test.com",
-            subject = "접수 완료",
-            body = "접수가 완료되었습니다."
-        )
-        outbox.markAsProcessing()
+        val outbox = createProcessingOutbox()
 
         given(emailOutboxRepository.findById(1L))
             .willReturn(Optional.of(outbox))
@@ -77,6 +67,31 @@ class EmailOutboxProcessorTest {
         assertEquals(1, outbox.retryCount)
         assertEquals("SMTP Error", outbox.lastErrorMessage)
         assertNull(outbox.sentAt)
+    }
+
+    @Test
+    @DisplayName("FAILED 상태 이메일 발송에 성공하면 SUCCESS 상태로 변경된다")
+    fun process_failed_retry_success() {
+        val outbox = EmailOutbox.create(
+            recipient = "user@test.com",
+            subject = "재시도 메일",
+            body = "본문"
+        )
+
+        outbox.markAsFailed("1차 실패")
+        outbox.markAsProcessing()
+
+        given(emailOutboxRepository.findById(1L))
+            .willReturn(Optional.of(outbox))
+
+        emailOutboxProcessor.process(1L)
+
+        verify(emailService).send(anyEmailMessage())
+
+        assertEquals(EmailOutboxStatus.SUCCESS, outbox.status)
+        assertEquals(1, outbox.retryCount)
+        assertNull(outbox.lastErrorMessage)
+        assertNotNull(outbox.sentAt)
     }
 
     @Test
@@ -110,6 +125,26 @@ class EmailOutboxProcessorTest {
     }
 
     @Test
+    @DisplayName("실패 메시지가 255자를 초과하면 255자로 잘라 저장한다")
+    fun process_fail_error_message_truncated() {
+        val outbox = createProcessingOutbox()
+        val longMessage = "a".repeat(300)
+
+        given(emailOutboxRepository.findById(1L))
+            .willReturn(Optional.of(outbox))
+
+        doThrow(RuntimeException(longMessage))
+            .`when`(emailService)
+            .send(anyEmailMessage())
+
+        emailOutboxProcessor.process(1L)
+
+        assertEquals(EmailOutboxStatus.FAILED, outbox.status)
+        assertEquals(1, outbox.retryCount)
+        assertEquals(255, outbox.lastErrorMessage?.length)
+    }
+
+    @Test
     @DisplayName("대상 Outbox가 존재하지 않으면 이메일 발송을 수행하지 않는다")
     fun process_not_found() {
         given(emailOutboxRepository.findById(1L))
@@ -118,6 +153,17 @@ class EmailOutboxProcessorTest {
         emailOutboxProcessor.process(1L)
 
         verify(emailService, never()).send(anyEmailMessage())
+    }
+
+    private fun createProcessingOutbox(): EmailOutbox {
+        val outbox = EmailOutbox.create(
+            recipient = "user@test.com",
+            subject = "접수 완료",
+            body = "접수가 완료되었습니다."
+        )
+
+        outbox.markAsProcessing()
+        return outbox
     }
 
     private fun anyEmailMessage(): EmailMessage {
