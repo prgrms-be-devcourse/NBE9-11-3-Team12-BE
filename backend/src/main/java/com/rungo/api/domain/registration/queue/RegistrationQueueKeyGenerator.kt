@@ -20,9 +20,9 @@ object RegistrationQueueKeyGenerator {
     fun result(requestId: String): String = "$QUEUE_PREFIX:result:$requestId"
 
     /**
-     * requestId 기준 현재 처리 중인 요청임을 표시하는 processing 키
+     * 현재 처리 중인 requestId들을 TTL과 함께 저장하는 processing 집합 키
      */
-    fun processing(requestId: String): String = "$QUEUE_PREFIX:processing:$requestId"
+    fun processingRequests(): String = PROCESSING_REQUESTS_KEY
 
     /**
      * 같은 사용자와 같은 마라톤 조합의 중복 enqueue를 잠시 막기 위한 dedupe 키
@@ -33,4 +33,5 @@ object RegistrationQueueKeyGenerator {
     private const val QUEUE_PREFIX = "queue:registration"
 
     private const val ACTIVE_COURSES_KEY = "$QUEUE_PREFIX:active:courses"
+    private const val PROCESSING_REQUESTS_KEY = "$QUEUE_PREFIX:processing:requests"
 }
