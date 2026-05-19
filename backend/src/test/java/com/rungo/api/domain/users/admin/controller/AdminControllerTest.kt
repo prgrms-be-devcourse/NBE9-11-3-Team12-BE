@@ -1,5 +1,6 @@
 package com.rungo.api.domain.users.admin.controller
 
+import com.rungo.api.domain.marathon.marathon.service.MarathonCleanupService
 import com.rungo.api.domain.users.admin.service.AdminService
 import com.rungo.api.domain.users.enumtype.Role
 import com.rungo.api.global.security.SecurityUser
@@ -28,6 +29,10 @@ class AdminControllerTest {
 
     @MockitoBean
     private lateinit var adminService: AdminService
+
+    @MockitoBean
+    private lateinit var marathonCleanupService: MarathonCleanupService
+
 
     @AfterEach
     fun tearDown() {
