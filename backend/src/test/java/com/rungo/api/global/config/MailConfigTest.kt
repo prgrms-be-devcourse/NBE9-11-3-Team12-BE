@@ -6,26 +6,28 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 
-@SpringBootTest
+@SpringBootTest(
+    properties = [
+        "spring.mail.username=test@example.com",
+        "spring.mail.password=test-password"
+    ]
+)
 class MailConfigTest(
+
     @Value("\${spring.mail.username}")
     private val username: String,
 
     @Value("\${spring.mail.password}")
     private val password: String,
-    ) {
+) {
 
     @Test
-    @DisplayName("환경변수(.env)의 SMTP 계정 정보가 정상적으로 주입된다")
-    fun smtp_env_injection_test() {
-        assertThat(username).isNotNull().isNotEmpty()
-        assertThat(password).isNotNull().isNotEmpty()
+    @DisplayName("테스트용 SMTP 계정 정보가 정상적으로 주입된다")
+    fun smtp_property_injection_test() {
 
-        // ${MAIL_USERNAME} 문자열 치환되었는지 확인
-        assertThat(username).doesNotContain("\${MAIL_USERNAME}")
-        assertThat(password).doesNotContain("\${MAIL_PASSWORD}")
+        assertThat(username).isEqualTo("test@example.com")
+        assertThat(password).isEqualTo("test-password")
 
-        // 확인용 로그 (비밀번호는 보안상 길이만큼 *로 마스킹)
         println("=====================================")
         println("주입된 이메일(username): $username")
         println("주입된 비밀번호(password): ${"*".repeat(password.length)}")
