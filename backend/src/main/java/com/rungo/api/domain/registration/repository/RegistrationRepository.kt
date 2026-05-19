@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
@@ -49,4 +50,8 @@ interface RegistrationRepository : JpaRepository<Registration, Long> {
     """
     )
     fun findParticipantEmailsByMarathonId(@Param("marathonId") marathonId: Long): List<String>
+
+    @Modifying
+    @Query("DELETE FROM Registration r WHERE r.marathon.id IN :marathonIds")
+    fun deleteAllByMarathonIdIn(@Param("marathonIds") marathonIds: List<Long>)
 }

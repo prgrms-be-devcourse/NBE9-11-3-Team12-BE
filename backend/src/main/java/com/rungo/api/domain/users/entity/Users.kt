@@ -71,6 +71,10 @@ class Users protected constructor() {
         this.role = Role.ORGANIZER
     }
 
+    fun promoteToAdmin() {
+        this.role = Role.ADMIN
+    }
+
     val isProfileCompleted: Boolean
         get() = phoneNumber != null && gender != null && birth != null
 
