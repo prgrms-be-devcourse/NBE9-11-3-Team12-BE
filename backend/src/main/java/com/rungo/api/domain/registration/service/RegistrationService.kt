@@ -49,6 +49,7 @@ class RegistrationService(
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     fun create(userId: Long, request: CreateRegistrationReq): CreateRegistrationRes {
+        // 필수 약관 미동의
         if (!request.agreedTerms) {
             throw CustomException(ErrorCode.REGISTRATION_TERMS_REQUIRED)
         }
@@ -69,6 +70,7 @@ class RegistrationService(
 
         val now = LocalDateTime.now()
 
+        // 접수 기간이 아니면 생성할 수 없다.
         if (now.isBefore(marathon.registrationStartAt) || now.isAfter(marathon.registrationEndAt)) {
             throw CustomException(ErrorCode.REGISTRATION_PERIOD_INVALID)
         }
@@ -106,6 +108,7 @@ class RegistrationService(
         }
 
         val updatedRows = courseRepository.increaseCurrentCountIfNotFull(course.id)
+
         if (updatedRows == 0) {
             throw CustomException(ErrorCode.CAPACITY_FULL)
         }
