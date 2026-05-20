@@ -6,7 +6,9 @@ import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
 import com.rungo.api.domain.notification.event.RegistrationCompletedEvent
+import com.rungo.api.domain.payment.entity.Payment
 import com.rungo.api.domain.payment.enumtype.PaymentCancelResult
+import com.rungo.api.domain.payment.enumtype.PaymentStatus
 import com.rungo.api.domain.payment.repository.PaymentRepository
 import com.rungo.api.domain.payment.service.PaymentService
 import com.rungo.api.domain.payment.support.OrderIdGenerator
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.times
@@ -148,6 +151,62 @@ class RegistrationCommandServiceTest {
 
         verify(courseRepository, times(1)).increaseCurrentCountIfNotFull(3L)
         verify(eventPublisher, times(1)).publishEvent(any(RegistrationCompletedEvent::class.java))
+    }
+
+    @Test
+    @DisplayName("유료 접수 생성 성공 - 결제 대기 Payment를 생성하고 접수 완료 이벤트는 발행하지 않는다")
+    fun create_paid_course_success_creates_ready_payment_without_event() {
+        val user = createUser(id = 1L, name = "홍길동", phoneNumber = "010-1111-2222")
+        val marathon = createMarathon(
+            registrationStartAt = LocalDateTime.now().minusDays(1),
+            registrationEndAt = LocalDateTime.now().plusDays(1),
+            status = MarathonStatus.OPEN
+        ).also { setField(it, "id", 2L) }
+        val course = createCourse(
+            marathon = marathon,
+            capacity = 100,
+            currentCount = 10,
+            price = BigDecimal.valueOf(30000)
+        ).also { setField(it, "id", 3L) }
+
+        val request = createRegistrationRequest(courseId = 3L)
+
+        val savedRegistration =
+            Registration.createPendingPayment(
+                user = user,
+                course = course,
+                marathon = marathon,
+                snapZipCode = request.snapZipCode,
+                snapAddress = request.snapAddress,
+                snapDetail = request.snapDetail,
+                tSize = request.tSize,
+                agreedTerms = request.agreedTerms,
+            ).also {
+                setField(it, "id", 4L)
+                setField(it, "appliedAt", LocalDateTime.of(2026, 4, 15, 10, 0))
+            }
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(user))
+        given(courseRepository.findById(3L)).willReturn(Optional.of(course))
+        given(marathonRepository.findByIdForUpdate(2L)).willReturn(marathon)
+        given(courseRepository.increaseCurrentCountIfNotFull(3L)).willReturn(1)
+        given(registrationRepository.save(any(Registration::class.java))).willReturn(savedRegistration)
+        given(orderIdGenerator.generate(anyLong(), any(LocalDateTime::class.java))).willReturn("ORDER-1")
+        given(paymentRepository.save(any(Payment::class.java))).willAnswer { invocation ->
+            invocation.arguments[0] as Payment
+        }
+
+        val result = registrationService.create(1L, request)
+
+        assertEquals(4L, result.registrationId)
+        assertEquals(RegistrationStatus.PENDING_PAYMENT, result.status)
+        assertEquals(PaymentStatus.READY, result.paymentStatus)
+        assertEquals("ORDER-1", result.orderId)
+        assertEquals(30000L, result.amount)
+
+        verify(registrationRepository, times(1)).save(any(Registration::class.java))
+        verify(paymentRepository, times(1)).save(any(Payment::class.java))
+        verify(eventPublisher, times(0)).publishEvent(any(RegistrationCompletedEvent::class.java))
     }
 
     @Test
