@@ -13,8 +13,10 @@ import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent
+import com.rungo.api.domain.payment.service.PaymentService
 import com.rungo.api.domain.registration.entity.RegistrationCancelHistory
 import com.rungo.api.domain.registration.enumtype.RegistrationCancelReason
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRepository
 import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
@@ -29,6 +31,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,6 +43,7 @@ class MarathonService(
     private val userRepository: UserRepository,
     private val registrationRepository: RegistrationRepository,
     private val registrationCancelHistoryRepository: RegistrationCancelHistoryRepository,
+    private val paymentService: PaymentService,
     private val eventPublisher: ApplicationEventPublisher,
     private val fileStorageService: FileStorageService,
     @Value("\${marathon.min-days.start-to-end}")
@@ -53,6 +57,9 @@ class MarathonService(
     @Transactional
     fun createMarathon(id: Long, req: CreateMarathonReq): CreateMarathonRes {
         val organizer = findOrganizer(id)
+
+        // 코스 가격이 정수 금액인지 검증
+        validateCoursePrices(req.courses.map { it.price })
 
         val posterImageUrl = fileStorageService.saveMarathonPoster(req.posterImage)
 
@@ -129,7 +136,9 @@ class MarathonService(
     @Transactional
     fun cancelMarathon(id: Long, marathonId: Long): CancelMarathonRes {
         val organizer = findOrganizer(id)
-        val marathon = getMarathonOrThrow(marathonId)
+
+        val marathon = marathonRepository.findByIdForUpdate(marathonId)
+            ?: throw CustomException(ErrorCode.MARATHON_NOT_FOUND)
 
         //자기 자신이 신청한 마라톤만 취소할 수 있도록 예외 처리
         if (marathon.organizer.id != organizer.id) {
@@ -137,12 +146,23 @@ class MarathonService(
         }
 
         // 참가자 이메일 미리 조회 (N+1 방지용 JPQL 활용)
-        val participantEmails = registrationRepository.findParticipantEmailsByMarathonId(marathonId)
+        val participantEmails = registrationRepository.findParticipantEmailsByMarathonIdAndStatus(
+            marathonId,
+            RegistrationStatus.COMPLETED,
+        )
         val registrations = registrationRepository.findAllByMarathon_IdOrderByAppliedAtDesc(marathonId)
 
         marathon.cancel()
 
         if (registrations.isNotEmpty()) {
+            val registrationIds = registrations.map { it.id }
+
+            // 마라톤 취소 대상 접수들의 결제 취소/환불 요청 처리
+            paymentService.cancelPaymentsForMarathonCancellation(
+                registrationIds = registrationIds,
+                cancelReason = "마라톤 취소",
+            )
+
             val cancelHistories = registrations.map { registration ->
                 RegistrationCancelHistory.create(
                     registration,
@@ -194,6 +214,9 @@ class MarathonService(
             registrationEndAt,
             eventDate
         )
+
+        // 입력된 코스 가격이 정수 금액인지 검증
+        validateCoursePrices(req.courses.orEmpty().mapNotNull { it.price })
 
         val posterImageUrl = req.posterImage?.let {
             fileStorageService.saveMarathonPoster(it)
@@ -348,6 +371,15 @@ class MarathonService(
             && !LocalDateTime.now().isBefore(marathon.registrationStartAt)
         ) {
             marathon.open()
+        }
+    }
+
+    // 결제 금액으로 사용할 수 있도록 소수 금액 방지
+    private fun validateCoursePrices(prices: Collection<BigDecimal>) {
+        prices.forEach { price ->
+            if (price.stripTrailingZeros().scale() > 0) {
+                throw CustomException(ErrorCode.INVALID_PAYMENT_AMOUNT)
+            }
         }
     }
 }

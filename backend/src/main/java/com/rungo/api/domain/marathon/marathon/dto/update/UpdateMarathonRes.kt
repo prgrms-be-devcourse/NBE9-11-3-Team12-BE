@@ -44,7 +44,6 @@ data class UpdateMarathonRes(
     val updatedAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(marathon: Marathon) = UpdateMarathonRes(
             id = marathon.id,
             title = marathon.title,

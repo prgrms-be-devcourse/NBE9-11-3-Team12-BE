@@ -48,8 +48,15 @@ class RegistrationController(
     ): ResponseEntity<ApiResponse<CreateRegistrationRes>> {
         val createRegistrationRes = registrationQueueService.create(user.id, request)
 
+        // 무료/유료 응답 메세지 분기
+        val message = if (createRegistrationRes.paymentStatus == null) {
+            "접수가 완료되었습니다."
+        } else {
+            "접수 신청이 완료되었습니다. 결제를 진행해주세요."
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.created("접수가 완료되었습니다.", createRegistrationRes))
+            .body(ApiResponse.created(message, createRegistrationRes))
     }
 
     @DeleteMapping("/{registrationId}")
@@ -65,7 +72,7 @@ class RegistrationController(
     ): ResponseEntity<ApiResponse<Void?>> {
         registrationService.cancel(user.id, registrationId)
 
-        return ResponseEntity.ok(ApiResponse.okMessage("접수가 취소되었습니다."))
+        return ResponseEntity.ok(ApiResponse.okMessage("접수가 취소되었습니다. 결제 완료 건은 환불 요청 상태로 전환되며 순차 처리됩니다."))
     }
 
     @GetMapping("/me")

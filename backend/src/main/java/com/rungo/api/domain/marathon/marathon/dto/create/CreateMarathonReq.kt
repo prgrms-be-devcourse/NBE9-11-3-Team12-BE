@@ -2,6 +2,7 @@ package com.rungo.api.domain.marathon.marathon.dto.create
 
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
@@ -50,6 +51,7 @@ data class CreateMarathonReq(
 
         @field:Schema(description = "참가비", example = "50000")
         @field:Min(value = 0, message = "참가비는 0 이상이어야 합니다.")
+        @field:Digits(integer = 10, fraction = 0, message = "참가비는 정수 원 단위여야 합니다.")
         val price: BigDecimal,
 
         @field:Schema(description = "정원", example = "300")

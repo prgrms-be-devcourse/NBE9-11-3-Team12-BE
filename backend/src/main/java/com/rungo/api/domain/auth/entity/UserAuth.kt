@@ -40,7 +40,6 @@ class UserAuth protected constructor() {
         protected set
 
     companion object {
-        @JvmStatic
         fun createLocalAuth(user: Users, encodedPassword: String): UserAuth =
             UserAuth().apply {
                 this.user = user
@@ -49,7 +48,6 @@ class UserAuth protected constructor() {
                 this.password = encodedPassword
             }
 
-        @JvmStatic
         fun createSocialAuth(
             user: Users,
             provider: Provider,

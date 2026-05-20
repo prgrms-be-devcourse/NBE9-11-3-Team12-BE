@@ -106,3 +106,21 @@ management:
         http.server.requests: true
     tags:
       application: rungo
+
+# 결제 관련 설정
+payment:
+  # 접수 후 결제 완료까지 허용되는 시간(분)
+  expire-minutes: 30
+  # 만료 결제 처리 스케줄러 실행 간격(ms)
+  expire-scheduler-delay-ms: 60000
+
+# 토스페이먼츠 연동 설정
+toss-payments:
+  # API 기본 URL
+  base-url: https://api.tosspayments.com
+  # 시크릿 키
+  secret-key: ${TOSS_SECRET_KEY:}
+  # API 연결 타임아웃(ms)
+  connect-timeout-ms: 3000
+  # API 응답 대기 타임아웃(ms)
+  read-timeout-ms: 10000

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Past
 import jakarta.validation.constraints.Pattern
 import java.time.LocalDate
 
-@JvmRecord
 @Schema(description = "소셜 로그인 사용자 프로필 보완 요청 DTO")
 data class CompleteProfileReq(
     @field:Schema(description = "사용자 이름", example = "홍길동")

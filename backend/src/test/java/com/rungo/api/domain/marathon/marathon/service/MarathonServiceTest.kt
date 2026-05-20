@@ -10,6 +10,8 @@ import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
 import com.rungo.api.domain.notification.event.MarathonCanceledEvent
+import com.rungo.api.domain.payment.service.PaymentService
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRepository
 import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
@@ -58,6 +60,9 @@ internal class MarathonServiceTest {
     private lateinit var registrationCancelHistoryRepository: RegistrationCancelHistoryRepository
 
     @Mock
+    private lateinit var paymentService: PaymentService
+
+    @Mock
     private lateinit var eventPublisher: ApplicationEventPublisher
 
     @Mock
@@ -70,6 +75,7 @@ internal class MarathonServiceTest {
             userRepository,
             registrationRepository,
             registrationCancelHistoryRepository,
+            paymentService,
             eventPublisher,
             fileStorageService,
             1L,
@@ -95,8 +101,8 @@ internal class MarathonServiceTest {
         ReflectionTestUtils.setField(marathon, "id", 1L)
 
         given(userRepository.findById(1L)).willReturn(Optional.of(organizer))
-        given(marathonRepository.findById(1L)).willReturn(Optional.of(marathon))
-        given(registrationRepository.findParticipantEmailsByMarathonId(1L))
+        given(marathonRepository.findByIdForUpdate(1L)).willReturn(marathon)
+        given(registrationRepository.findParticipantEmailsByMarathonIdAndStatus(1L, RegistrationStatus.COMPLETED))
             .willReturn(listOf("user1@test.com", "user2@test.com"))
 
         marathonService.cancelMarathon(1L, 1L)
@@ -349,8 +355,8 @@ internal class MarathonServiceTest {
         val marathon = createMarathon(10L, organizer, MarathonStatus.OPEN)
 
         given(userRepository.findById(1L)).willReturn(Optional.of(organizer))
-        given(marathonRepository.findById(10L)).willReturn(Optional.of(marathon))
-        given(registrationRepository.findParticipantEmailsByMarathonId(10L)).willReturn(emptyList())
+        given(marathonRepository.findByIdForUpdate(10L)).willReturn(marathon)
+        given(registrationRepository.findParticipantEmailsByMarathonIdAndStatus(10L, RegistrationStatus.COMPLETED)).willReturn(emptyList())
         given(registrationRepository.findAllByMarathon_IdOrderByAppliedAtDesc(10L)).willReturn(emptyList())
 
         val result = marathonService.cancelMarathon(1L, 10L)
@@ -396,7 +402,7 @@ internal class MarathonServiceTest {
         val organizer = createUser(1L, "주최자", Role.ORGANIZER)
 
         given(userRepository.findById(1L)).willReturn(Optional.of(organizer))
-        given(marathonRepository.findById(10L)).willReturn(Optional.empty())
+        given(marathonRepository.findByIdForUpdate(10L)).willReturn(null)
 
         val exception = assertThrows(CustomException::class.java) {
             marathonService.cancelMarathon(1L, 10L)
@@ -413,7 +419,7 @@ internal class MarathonServiceTest {
         val marathon = createMarathon(10L, anotherOrganizer, MarathonStatus.OPEN)
 
         given(userRepository.findById(1L)).willReturn(Optional.of(organizer))
-        given(marathonRepository.findById(10L)).willReturn(Optional.of(marathon))
+        given(marathonRepository.findByIdForUpdate(10L)).willReturn(marathon)
 
         val exception = assertThrows(CustomException::class.java) {
             marathonService.cancelMarathon(1L, 10L)
@@ -429,7 +435,7 @@ internal class MarathonServiceTest {
         val marathon = createMarathon(10L, organizer, MarathonStatus.CANCELED)
 
         given(userRepository.findById(1L)).willReturn(Optional.of(organizer))
-        given(marathonRepository.findById(10L)).willReturn(Optional.of(marathon))
+        given(marathonRepository.findByIdForUpdate(10L)).willReturn(marathon)
 
         val exception = assertThrows(CustomException::class.java) {
             marathonService.cancelMarathon(1L, 10L)

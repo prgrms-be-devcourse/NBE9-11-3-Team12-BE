@@ -4,6 +4,9 @@ import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.course.repository.CourseRepository
 import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
+import com.rungo.api.domain.payment.repository.PaymentRepository
+import com.rungo.api.domain.payment.service.PaymentService
+import com.rungo.api.domain.payment.support.OrderIdGenerator
 import com.rungo.api.domain.registration.dto.MyRegistrationRes
 import com.rungo.api.domain.registration.entity.Registration
 import com.rungo.api.domain.registration.entity.RegistrationCancelHistory
@@ -14,13 +17,13 @@ import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Gender
 import com.rungo.api.domain.users.repository.UserRepository
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.*
 import org.mockito.BDDMockito.given
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -38,7 +41,6 @@ import java.time.LocalDateTime
 @ExtendWith(MockitoExtension::class)
 class RegistrationReadServiceTest {
 
-    @InjectMocks
     private lateinit var registrationService: RegistrationService
 
     @Mock
@@ -57,7 +59,33 @@ class RegistrationReadServiceTest {
     private lateinit var userRepository: UserRepository
 
     @Mock
+    private lateinit var paymentRepository: PaymentRepository
+
+    @Mock
+    private lateinit var paymentService: PaymentService
+
+    @Mock
+    private lateinit var orderIdGenerator: OrderIdGenerator
+
+    @Mock
     private lateinit var eventPublisher: ApplicationEventPublisher
+
+
+    @BeforeEach
+    fun setUp() {
+        registrationService = RegistrationService(
+            registrationRepository = registrationRepository,
+            registrationCancelHistoryRepository = registrationCancelHistoryRepository,
+            courseRepository = courseRepository,
+            marathonRepository = marathonRepository,
+            userRepository = userRepository,
+            paymentRepository = paymentRepository,
+            paymentService = paymentService,
+            orderIdGenerator = orderIdGenerator,
+            paymentExpireMinutes = 30L,
+            eventPublisher = eventPublisher,
+        )
+    }
 
     @Test
     @DisplayName("내 접수 조회 성공 - ACTIVE 조회 시 appliedAt, id 내림차순으로 정상 접수 목록을 반환한다")
@@ -72,7 +100,7 @@ class RegistrationReadServiceTest {
         val course = createCourse(marathon, "10K", 50000, 100, 10)
         ReflectionTestUtils.setField(course, "id", 20L)
 
-        val registration = Registration.create(
+        val registration = Registration.createCompleted(
             user = user,
             course = course,
             marathon = marathon,
@@ -93,6 +121,8 @@ class RegistrationReadServiceTest {
 
         given(registrationRepository.findByUser_Id(eq(userId), anyPageable()))
             .willReturn(page)
+        given(paymentRepository.findByOriginalRegistrationIdIn(anyCollection()))
+            .willReturn(emptyList())
 
         val result = registrationService.getMyRegistrations(
             userId,
@@ -131,7 +161,7 @@ class RegistrationReadServiceTest {
         assertEquals("서울 마라톤", item.marathonTitle)
         assertEquals(20L, item.courseId)
         assertEquals("10K", item.courseType)
-        assertEquals("ACTIVE", item.status)
+        assertEquals("COMPLETED", item.status)
         assertEquals(BigDecimal("50000"), item.price)
         assertEquals(LocalDate.of(2026, 10, 25), item.eventDate)
         assertEquals("홍길동", item.snapName)
@@ -158,7 +188,7 @@ class RegistrationReadServiceTest {
         val course = createCourse(marathon, "Half", 70000, 200, 50)
         ReflectionTestUtils.setField(course, "id", 200L)
 
-        val registration = Registration.create(
+        val registration = Registration.createCompleted(
             user = user,
             course = course,
             marathon = marathon,
@@ -191,6 +221,8 @@ class RegistrationReadServiceTest {
             .willReturn(listOf(marathon))
         given(courseRepository.findAllById(setOf(200L)))
             .willReturn(listOf(course))
+        given(paymentRepository.findByOriginalRegistrationIdIn(anyCollection()))
+            .willReturn(emptyList())
 
         val result = registrationService.getMyRegistrations(
             userId,

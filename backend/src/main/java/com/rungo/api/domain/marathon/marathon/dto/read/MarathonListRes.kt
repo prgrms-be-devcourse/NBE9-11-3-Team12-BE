@@ -20,8 +20,6 @@ data class MarathonListRes(
 ) {
 
     companion object {
-
-        @JvmStatic
         fun from(page: Page<Marathon>): MarathonListRes {
             return MarathonListRes(
                 content = page.content
@@ -100,8 +98,6 @@ data class MarathonListRes(
     ) {
 
         companion object {
-
-            @JvmStatic
             fun from(marathon: Marathon): Item {
 
                 val totalCapacity = marathon.courses

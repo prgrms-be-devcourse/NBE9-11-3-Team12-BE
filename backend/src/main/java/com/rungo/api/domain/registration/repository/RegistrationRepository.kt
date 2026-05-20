@@ -1,6 +1,7 @@
 package com.rungo.api.domain.registration.repository
 
 import com.rungo.api.domain.registration.entity.Registration
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
@@ -54,4 +55,60 @@ interface RegistrationRepository : JpaRepository<Registration, Long> {
     @Modifying
     @Query("DELETE FROM Registration r WHERE r.marathon.id IN :marathonIds")
     fun deleteAllByMarathonIdIn(@Param("marathonIds") marathonIds: List<Long>)
+
+    // --------------------------------------------------------------------------
+    // 아래 메서드는 위 메서드에 상태 추가한 코드, 위 메서드는 테스트용으로 남겨둠
+
+    @EntityGraph(attributePaths = ["course"])
+    fun findByMarathon_IdAndStatus(
+        marathonId: Long,
+        status: RegistrationStatus,
+        pageable: Pageable,
+    ): Page<Registration>
+
+    @EntityGraph(attributePaths = ["course"])
+    fun findByMarathon_IdAndCourse_IdAndStatus(
+        marathonId: Long,
+        courseId: Long,
+        status: RegistrationStatus,
+        pageable: Pageable,
+    ): Page<Registration>
+
+    @EntityGraph(attributePaths = ["course"])
+    fun findByMarathon_IdAndSnapNameContainingAndStatus(
+        marathonId: Long,
+        name: String,
+        status: RegistrationStatus,
+        pageable: Pageable,
+    ): Page<Registration>
+
+    @EntityGraph(attributePaths = ["course"])
+    fun findByMarathon_IdAndCourse_IdAndSnapNameContainingAndStatus(
+        marathonId: Long,
+        courseId: Long,
+        name: String,
+        status: RegistrationStatus,
+        pageable: Pageable,
+    ): Page<Registration>
+
+    @EntityGraph(attributePaths = ["marathon", "course"])
+    fun findByIdAndMarathon_IdAndStatus(
+        registrationId: Long,
+        marathonId: Long,
+        status: RegistrationStatus,
+    ): Registration?
+
+    // 특정 상태의 참가자 이메일 목록 조회
+    @Query(
+        """
+        SELECT DISTINCT r.user.email
+        FROM Registration r
+        WHERE r.course.marathon.id = :marathonId
+          AND r.status = :status
+        """
+    )
+    fun findParticipantEmailsByMarathonIdAndStatus(
+        @Param("marathonId") marathonId: Long,
+        @Param("status") status: RegistrationStatus,
+    ): List<String>
 }

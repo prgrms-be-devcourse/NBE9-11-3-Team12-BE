@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes
 import com.rungo.api.domain.registration.queue.service.RegistrationQueueService
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import com.rungo.api.domain.registration.service.RegistrationService
 import com.rungo.api.domain.users.enumtype.Role
 import com.rungo.api.global.exception.CustomException
@@ -59,13 +60,17 @@ class RegistrationCommandControllerTest {
 
         val request = createRegistrationRequest()
         val response = CreateRegistrationRes(
-            10L,
-            20L,
-            "서울 마라톤",
-            1L,
-            "10K",
-            "COMPLETED",
-            LocalDateTime.of(2026, 4, 16, 9, 0)
+            registrationId = 10L,
+            marathonId = 20L,
+            marathonTitle = "서울 마라톤",
+            courseId = 1L,
+            courseType = "10K",
+            status = RegistrationStatus.COMPLETED,
+            paymentStatus = null,
+            orderId = null,
+            amount = null,
+            paymentDueAt = null,
+            appliedAt = LocalDateTime.of(2026, 4, 16, 9, 0)
         )
 
         given(registrationQueueService.create(1L, request)).willReturn(response)
@@ -275,7 +280,7 @@ class RegistrationCommandControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.status").value(200))
             .andExpect(jsonPath("$.code").value("SUCCESS"))
-            .andExpect(jsonPath("$.message").value("접수가 취소되었습니다."))
+            .andExpect(jsonPath("$.message").value("접수가 취소되었습니다. 결제 완료 건은 환불 요청 상태로 전환되며 순차 처리됩니다."))
             .andExpect(jsonPath("$.data").value(nullValue()))
 
         verify(registrationService).cancel(1L, 10L)

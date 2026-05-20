@@ -6,6 +6,7 @@ import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
 import com.rungo.api.domain.registration.dto.RegistrationOverviewRes
 import com.rungo.api.domain.registration.dto.RegistrationParticipantDetailRes
 import com.rungo.api.domain.registration.dto.RegistrationParticipantListRes
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.global.exception.CustomException
 import com.rungo.api.global.exception.ErrorCode
@@ -48,16 +49,39 @@ class RegistrationOrganizerQueryService(
 
         val keyword = normalizeKeyword(name)
 
-        // 필터 조합에 따라 참가자 목록 조회
+        // 필터 조건에 따라 결제 완료된 접수 목록 조회
         val page = when {
             courseId == null && keyword == null ->
-                registrationRepository.findByMarathon_Id(marathonId, pageable)
+                registrationRepository.findByMarathon_IdAndStatus(
+                    marathonId,
+                    RegistrationStatus.COMPLETED,
+                    pageable,
+                )
+
             courseId != null && keyword == null ->
-                registrationRepository.findByMarathon_IdAndCourse_Id(marathonId, courseId, pageable)
+                registrationRepository.findByMarathon_IdAndCourse_IdAndStatus(
+                    marathonId,
+                    courseId,
+                    RegistrationStatus.COMPLETED,
+                    pageable,
+                )
+
             courseId == null && keyword != null ->
-                registrationRepository.findByMarathon_IdAndSnapNameContaining(marathonId, keyword, pageable)
+                registrationRepository.findByMarathon_IdAndSnapNameContainingAndStatus(
+                    marathonId,
+                    keyword,
+                    RegistrationStatus.COMPLETED,
+                    pageable,
+                )
+
             else ->
-                registrationRepository.findByMarathon_IdAndCourse_IdAndSnapNameContaining(marathonId, courseId!!, keyword!!, pageable)
+                registrationRepository.findByMarathon_IdAndCourse_IdAndSnapNameContainingAndStatus(
+                    marathonId,
+                    courseId!!,
+                    keyword!!,
+                    RegistrationStatus.COMPLETED,
+                    pageable,
+                )
         }
 
 
@@ -73,9 +97,12 @@ class RegistrationOrganizerQueryService(
         val marathon = getMarathonById(marathonId)
         validateOrganizer(marathon, organizerId)
 
-        // 마라톤에 속한 접수인지 검증
-        val registration = registrationRepository.findByIdAndMarathon_Id(registrationId, marathonId)
-            ?: throw CustomException(ErrorCode.REGISTRATION_NOT_FOUND)
+        // 결제 완료된 접수 상세 조회
+        val registration = registrationRepository.findByIdAndMarathon_IdAndStatus(
+            registrationId,
+            marathonId,
+            RegistrationStatus.COMPLETED,
+        ) ?: throw CustomException(ErrorCode.REGISTRATION_NOT_FOUND)
 
         return RegistrationParticipantDetailRes.from(registration)
     }
