@@ -1,12 +1,15 @@
 package com.rungo.api.domain.registration.queue.scheduler
 
+import com.rungo.api.domain.registration.queue.config.RegistrationQueueConfig
 import com.rungo.api.domain.registration.queue.config.RegistrationQueueProperties
 import com.rungo.api.domain.registration.queue.repository.RegistrationQueueRepository
 import com.rungo.api.domain.registration.queue.service.RegistrationQueueService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.concurrent.Executor
 
 @Component
 @ConditionalOnProperty(
@@ -17,7 +20,9 @@ import org.springframework.stereotype.Component
 class RegistrationQueueScheduler(
     private val properties: RegistrationQueueProperties,
     private val registrationQueueRepository: RegistrationQueueRepository,
-    private val registrationQueueService: RegistrationQueueService
+    private val registrationQueueService: RegistrationQueueService,
+    @Qualifier(RegistrationQueueConfig.REGISTRATION_QUEUE_WORKER_EXECUTOR)
+    private val registrationQueueWorkerExecutor: Executor
 ) {
 
     @Scheduled(fixedDelayString = "\${registration.queue.poll-interval}")
@@ -48,7 +53,9 @@ class RegistrationQueueScheduler(
                     courseId,
                     claimedRequestId
                 )
-                registrationQueueService.process(claimedRequestId)
+                registrationQueueWorkerExecutor.execute {
+                    registrationQueueService.process(claimedRequestId)
+                }
             }
         }
     }
