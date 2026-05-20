@@ -3,6 +3,7 @@ package com.rungo.api.domain.registration.controller
 import com.rungo.api.domain.marathon.marathon.dto.PageRes
 import com.rungo.api.domain.registration.dto.MyRegistrationRes
 import com.rungo.api.domain.registration.enumtype.MyRegistrationStatusFilter
+import com.rungo.api.domain.registration.queue.service.RegistrationQueueService
 import com.rungo.api.domain.registration.service.RegistrationService
 import com.rungo.api.domain.users.enumtype.Role
 import com.rungo.api.global.security.SecurityUser
@@ -39,6 +40,9 @@ class RegistrationReadControllerTest {
 
     @MockitoBean
     private lateinit var registrationService: RegistrationService
+
+    @MockitoBean
+    private lateinit var registrationQueueService: RegistrationQueueService
 
     @AfterEach
     fun tearDown() {
