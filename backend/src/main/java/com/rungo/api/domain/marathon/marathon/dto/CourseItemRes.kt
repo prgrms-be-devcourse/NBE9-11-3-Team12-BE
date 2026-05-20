@@ -20,7 +20,7 @@ data class CourseItemRes(
     @field:Schema(description = "정원", example = "300")
     val capacity: Int,
 
-    @field:Schema(description = "현재 접수 인원", example = "120")
+    @field:Schema(description = "선점 인원. 결제 완료 접수와 결제 대기 접수를 포함", example = "120")
     val currentCount: Int,
 
     @field:Schema(description = "잔여 인원", example = "180")

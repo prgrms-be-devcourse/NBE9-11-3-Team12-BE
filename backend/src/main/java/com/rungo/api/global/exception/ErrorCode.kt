@@ -52,4 +52,12 @@ enum class ErrorCode(
     // 관리자
     ORGANIZER_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "주최자 권한 신청을 찾을 수 없습니다."),
     ALREADY_PROCESSED_APPLICATION(HttpStatus.BAD_REQUEST, "이미 처리된 주최자 권한 신청입니다."),
+
+    // 결제
+    PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "결제 정보를 찾을 수 없습니다."),
+    INVALID_PAYMENT_AMOUNT(HttpStatus.BAD_REQUEST, "결제 금액이 올바르지 않습니다."),
+    INVALID_PAYMENT_STATUS(HttpStatus.BAD_REQUEST, "결제 상태가 올바르지 않습니다."),
+    PAYMENT_EXPIRED(HttpStatus.BAD_REQUEST, "결제 가능 시간이 만료되었습니다."),
+    PAYMENT_CONFIRM_FAILED(HttpStatus.BAD_GATEWAY, "결제 승인에 실패했습니다."),
+    PAYMENT_REFUND_FAILED(HttpStatus.BAD_GATEWAY, "결제 환불에 실패했습니다.")
 }

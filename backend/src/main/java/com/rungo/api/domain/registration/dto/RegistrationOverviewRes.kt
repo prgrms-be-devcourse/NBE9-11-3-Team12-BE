@@ -53,7 +53,7 @@ data class RegistrationOverviewRes(
         @field:Schema(description = "지역", example = "서울")
         val region: String,
 
-        @field:Schema(description = "전체 접수 인원", example = "180")
+        @field:Schema(description = "전체 선점 인원. 결제 완료 접수와 결제 대기 접수를 포함", example = "180")
         val totalCurrentCount: Int,
 
         @field:Schema(description = "전체 정원", example = "500")
@@ -100,7 +100,7 @@ data class RegistrationOverviewRes(
         @field:Schema(description = "참가비", example = "50000")
         val price: BigDecimal,
 
-        @field:Schema(description = "현재 접수 인원", example = "120")
+        @field:Schema(description = "코스별 선점 인원. 결제 완료 접수와 결제 대기 접수를 포함", example = "120")
         val currentCount: Int,
 
         @field:Schema(description = "정원", example = "300")

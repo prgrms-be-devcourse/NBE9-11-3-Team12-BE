@@ -176,6 +176,12 @@ class SecurityConfig(
                         "/api/v1/registrations/*",
                     ).authenticated()
 
+                    // 결제 승인: 로그인 필요
+                    .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/v1/payments/confirm",
+                    ).authenticated()
+
                     // 관리자
                     // /api/v1/admin/** 전체: ADMIN 역할만 접근 가능
                     .requestMatchers("/api/v1/admin/**")

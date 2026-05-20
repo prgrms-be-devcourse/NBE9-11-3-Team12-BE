@@ -22,7 +22,7 @@ class Course protected constructor() {
     lateinit var courseType: String
         protected set
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 10, scale = 0)
     lateinit var price: BigDecimal
         protected set
 

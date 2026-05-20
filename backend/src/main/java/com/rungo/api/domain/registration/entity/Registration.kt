@@ -82,9 +82,18 @@ class Registration protected constructor() {
     var isAgreedTerms: Boolean = false
         protected set
 
+    // 결제 대기 상태인 접수만 완료 처리 가능
+    fun completePayment() {
+        if (this.status != RegistrationStatus.PENDING_PAYMENT) {
+            throw CustomException(ErrorCode.INVALID_REGISTRATION_STATUS)
+        }
+        this.status = RegistrationStatus.COMPLETED
+    }
+
+    // 무료 접수용 Registration 생성 메서드 (상태 : COMPLETED)
     companion object {
         @JvmStatic
-        fun create(
+        fun createCompleted(
             user: Users,
             course: Course,
             marathon: Marathon,
@@ -93,11 +102,56 @@ class Registration protected constructor() {
             snapDetail: String?,
             tSize: String,
             agreedTerms: Boolean
+        ): Registration = createInternal(
+            user = user,
+            course = course,
+            marathon = marathon,
+            snapZipCode = snapZipCode,
+            snapAddress = snapAddress,
+            snapDetail = snapDetail,
+            tSize = tSize,
+            agreedTerms = agreedTerms,
+            status = RegistrationStatus.COMPLETED,
+        )
+
+        // 유료 접수용 Registration 생성 메서드 (상태 : PENDING_PAYMENT)
+        @JvmStatic
+        fun createPendingPayment(
+            user: Users,
+            course: Course,
+            marathon: Marathon,
+            snapZipCode: String,
+            snapAddress: String,
+            snapDetail: String?,
+            tSize: String,
+            agreedTerms: Boolean,
+        ): Registration = createInternal(
+            user = user,
+            course = course,
+            marathon = marathon,
+            snapZipCode = snapZipCode,
+            snapAddress = snapAddress,
+            snapDetail = snapDetail,
+            tSize = tSize,
+            agreedTerms = agreedTerms,
+            status = RegistrationStatus.PENDING_PAYMENT,
+        )
+
+        private fun createInternal(
+            user: Users,
+            course: Course,
+            marathon: Marathon,
+            snapZipCode: String,
+            snapAddress: String,
+            snapDetail: String?,
+            tSize: String,
+            agreedTerms: Boolean,
+            status: RegistrationStatus,
         ): Registration = Registration().apply {
             this.user = user
             this.course = course
             this.marathon = marathon
-            this.status = RegistrationStatus.COMPLETED
+            this.status = status
             this.snapName = user.name
             this.snapPhoneNumber = user.phoneNumber
                 ?: throw CustomException(ErrorCode.PROFILE_NOT_COMPLETED)
