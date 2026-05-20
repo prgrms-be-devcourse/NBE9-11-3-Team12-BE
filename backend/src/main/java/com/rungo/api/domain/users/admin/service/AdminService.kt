@@ -25,7 +25,10 @@ class AdminService(
 
 
     @Transactional
-    fun approveOrganizer(adminId: Long, userId: Long): AdminApproveRes {
+    fun approveOrganizerApplication(
+        adminId: Long,
+        applicationId: Long,
+    ): AdminApproveRes {
         val admin = userRepository.findByIdOrNull(adminId)
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
@@ -33,13 +36,20 @@ class AdminService(
             throw CustomException(ErrorCode.FORBIDDEN)
         }
 
-        val user = userRepository.findByIdOrNull(userId)
-            ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
+        val application = organizerApplicationRepository.findByIdOrNull(applicationId)
+            ?: throw CustomException(ErrorCode.ORGANIZER_APPLICATION_NOT_FOUND)
+
+        if (application.status != ApplicationStatus.PENDING) {
+            throw CustomException(ErrorCode.ALREADY_PROCESSED_APPLICATION)
+        }
+
+        val user = application.user
 
         if (user.role == Role.ORGANIZER) {
             throw CustomException(ErrorCode.ALREADY_ORGANIZER)
         }
 
+        application.approve()
         user.promoteToOrganizer()
 
         return AdminApproveRes(
@@ -49,7 +59,7 @@ class AdminService(
             user.phoneNumber,
             user.gender,
             user.birth,
-            user.role
+            user.role,
         )
     }
     @Transactional

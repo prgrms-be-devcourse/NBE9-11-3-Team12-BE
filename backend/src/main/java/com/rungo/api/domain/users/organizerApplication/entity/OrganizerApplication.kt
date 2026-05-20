@@ -40,6 +40,11 @@ class OrganizerApplication protected constructor() {
     lateinit var requestedAt: LocalDateTime
         protected set
 
+    fun approve() {
+        status = ApplicationStatus.APPROVED
+        rejectReason = null
+    }
+
     fun reject(reason: String){
         rejectReason = reason
         status = ApplicationStatus.REJECTED

@@ -49,75 +49,113 @@ class AdminServiceTest {
     }
 
     @Test
-    @DisplayName("주최자 권한 부여 성공 - 관리자가 참가자 유저를 ORGANIZER로 승급시킨다")
-    fun approve_organizer_success() {
+    @DisplayName("주최자 권한 신청 승인 성공 - 신청 상태가 APPROVED로 변경되고 유저가 ORGANIZER로 승급된다")
+    fun approveOrganizerApplicationSuccess() {
         val admin = createUser(1L, "관리자", Role.ADMIN)
         val participant = createUser(2L, "참가자", Role.PARTICIPANT)
+        val application = createApplication(
+            id = 10L,
+            user = participant,
+            status = ApplicationStatus.PENDING,
+        )
 
         given(userRepository.findById(1L)).willReturn(Optional.of(admin))
-        given(userRepository.findById(2L)).willReturn(Optional.of(participant))
+        given(organizerApplicationRepository.findById(10L)).willReturn(Optional.of(application))
 
-        adminService.approveOrganizer(1L, 2L)
+        val result = adminService.approveOrganizerApplication(1L, 10L)
 
+        assertEquals(2L, result.id)
+        assertEquals(Role.ORGANIZER, result.role)
         assertEquals(Role.ORGANIZER, participant.role)
+        assertEquals(ApplicationStatus.APPROVED, application.status)
+
+        verify(userRepository).findById(1L)
+        verify(organizerApplicationRepository).findById(10L)
     }
 
     @Test
-    @DisplayName("주최자 권한 부여 실패 - 관리자 유저가 없으면 USER_NOT_FOUND 예외가 발생한다")
-    fun approve_organizer_fail_admin_not_found() {
+    @DisplayName("주최자 권한 신청 승인 실패 - 관리자 유저가 없으면 USER_NOT_FOUND 예외가 발생한다")
+    fun approveOrganizerApplicationFailAdminNotFound() {
         given(userRepository.findById(1L)).willReturn(Optional.empty())
 
         val exception = assertThrows(CustomException::class.java) {
-            adminService.approveOrganizer(1L, 2L)
+            adminService.approveOrganizerApplication(1L, 10L)
         }
 
         assertEquals(ErrorCode.USER_NOT_FOUND, exception.errorCode)
     }
 
     @Test
-    @DisplayName("주최자 권한 부여 실패 - 관리자가 아니면 FORBIDDEN 예외가 발생한다")
-    fun approve_organizer_fail_not_admin() {
+    @DisplayName("주최자 권한 신청 승인 실패 - 관리자가 아니면 FORBIDDEN 예외가 발생한다")
+    fun approveOrganizerApplicationFailNotAdmin() {
         val participant = createUser(1L, "참가자", Role.PARTICIPANT)
 
         given(userRepository.findById(1L)).willReturn(Optional.of(participant))
 
         val exception = assertThrows(CustomException::class.java) {
-            adminService.approveOrganizer(1L, 2L)
+            adminService.approveOrganizerApplication(1L, 10L)
         }
 
         assertEquals(ErrorCode.FORBIDDEN, exception.errorCode)
     }
 
     @Test
-    @DisplayName("주최자 권한 부여 실패 - 대상 유저가 없으면 USER_NOT_FOUND 예외가 발생한다")
-    fun approve_organizer_fail_target_user_not_found() {
+    @DisplayName("주최자 권한 신청 승인 실패 - 신청 내역이 없으면 ORGANIZER_APPLICATION_NOT_FOUND 예외가 발생한다")
+    fun approveOrganizerApplicationFailApplicationNotFound() {
         val admin = createUser(1L, "관리자", Role.ADMIN)
 
         given(userRepository.findById(1L)).willReturn(Optional.of(admin))
-        given(userRepository.findById(2L)).willReturn(Optional.empty())
+        given(organizerApplicationRepository.findById(10L)).willReturn(Optional.empty())
 
         val exception = assertThrows(CustomException::class.java) {
-            adminService.approveOrganizer(1L, 2L)
+            adminService.approveOrganizerApplication(1L, 10L)
         }
 
-        assertEquals(ErrorCode.USER_NOT_FOUND, exception.errorCode)
+        assertEquals(ErrorCode.ORGANIZER_APPLICATION_NOT_FOUND, exception.errorCode)
     }
 
     @Test
-    @DisplayName("주최자 권한 부여 실패 - 이미 주최자면 ALREADY_ORGANIZER 예외가 발생한다")
-    fun approve_organizer_fail_already_organizer() {
+    @DisplayName("주최자 권한 신청 승인 실패 - 이미 처리된 신청이면 ALREADY_PROCESSED_APPLICATION 예외가 발생한다")
+    fun approveOrganizerApplicationFailAlreadyProcessed() {
         val admin = createUser(1L, "관리자", Role.ADMIN)
-        val organizer = createUser(2L, "주최자", Role.ORGANIZER)
+        val participant = createUser(2L, "참가자", Role.PARTICIPANT)
+        val application = createApplication(
+            id = 10L,
+            user = participant,
+            status = ApplicationStatus.REJECTED,
+        )
 
         given(userRepository.findById(1L)).willReturn(Optional.of(admin))
-        given(userRepository.findById(2L)).willReturn(Optional.of(organizer))
+        given(organizerApplicationRepository.findById(10L)).willReturn(Optional.of(application))
 
         val exception = assertThrows(CustomException::class.java) {
-            adminService.approveOrganizer(1L, 2L)
+            adminService.approveOrganizerApplication(1L, 10L)
+        }
+
+        assertEquals(ErrorCode.ALREADY_PROCESSED_APPLICATION, exception.errorCode)
+    }
+
+    @Test
+    @DisplayName("주최자 권한 신청 승인 실패 - 신청자가 이미 주최자면 ALREADY_ORGANIZER 예외가 발생한다")
+    fun approveOrganizerApplicationFailAlreadyOrganizer() {
+        val admin = createUser(1L, "관리자", Role.ADMIN)
+        val organizer = createUser(2L, "주최자", Role.ORGANIZER)
+        val application = createApplication(
+            id = 10L,
+            user = organizer,
+            status = ApplicationStatus.PENDING,
+        )
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(admin))
+        given(organizerApplicationRepository.findById(10L)).willReturn(Optional.of(application))
+
+        val exception = assertThrows(CustomException::class.java) {
+            adminService.approveOrganizerApplication(1L, 10L)
         }
 
         assertEquals(ErrorCode.ALREADY_ORGANIZER, exception.errorCode)
     }
+
 
     @Test
     @DisplayName("주최자 권한 신청 거절 성공 - 신청 상태가 REJECTED로 변경되고 거절 사유가 저장된다")

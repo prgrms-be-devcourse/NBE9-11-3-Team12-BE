@@ -58,32 +58,39 @@ class AdminControllerTest {
     }
 
     @Test
-    @DisplayName("주최자 권한 부여 성공 - 200 상태코드와 공통 응답 규격을 반환한다")
-    fun approve_organizer_success() {
+    @DisplayName("주최자 권한 신청 승인 성공 - 200 상태코드와 승인 응답을 반환한다")
+    fun approveOrganizerApplicationSuccess() {
         setAuthenticatedAdmin(1L)
 
-        val response = AdminApproveRes(
+        val res = AdminApproveRes(
             id = 2L,
             email = "user@test.com",
-            name = "참가자",
+            name = "홍길동",
             phoneNumber = "010-1111-2222",
             gender = Gender.MALE,
             birth = LocalDate.of(2000, 1, 1),
             role = Role.ORGANIZER,
         )
 
-        given(adminService.approveOrganizer(1L, 2L))
-            .willReturn(response)
+        given(adminService.approveOrganizerApplication(1L, 10L))
+            .willReturn(res)
 
-        mockMvc.perform(patch("/api/v1/admin/{userId}/organizer", 2L))
+        mockMvc.perform(
+            patch("/api/v1/admin/organizer-applications/{applicationId}/approve", 10L)
+        )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.status").value(200))
             .andExpect(jsonPath("$.code").value("SUCCESS"))
             .andExpect(jsonPath("$.message").value("요청에 성공했습니다."))
             .andExpect(jsonPath("$.data.id").value(2))
+            .andExpect(jsonPath("$.data.email").value("user@test.com"))
+            .andExpect(jsonPath("$.data.name").value("홍길동"))
+            .andExpect(jsonPath("$.data.phoneNumber").value("010-1111-2222"))
+            .andExpect(jsonPath("$.data.gender").value("MALE"))
+            .andExpect(jsonPath("$.data.birth").value("2000-01-01"))
             .andExpect(jsonPath("$.data.role").value("ORGANIZER"))
 
-        verify(adminService).approveOrganizer(1L, 2L)
+        verify(adminService).approveOrganizerApplication(1L, 10L)
     }
 
     @Test
@@ -239,6 +246,8 @@ class AdminControllerTest {
                 .param("size", "20")
         )
             .andExpect(status().isOk)
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.code").value("SUCCESS"))
             .andExpect(jsonPath("$.data.content.length()").value(0))
             .andExpect(jsonPath("$.data.page.totalElements").value(0))
 
@@ -267,13 +276,13 @@ class AdminControllerTest {
             userId,
             "admin@test.com",
             Role.ADMIN,
-            listOf(SimpleGrantedAuthority("ROLE_ADMIN"))
+            listOf(SimpleGrantedAuthority("ROLE_ADMIN")),
         )
 
         val authentication = UsernamePasswordAuthenticationToken(
             securityUser,
             null,
-            securityUser.authorities
+            securityUser.authorities,
         )
 
         SecurityContextHolder.getContext().authentication = authentication

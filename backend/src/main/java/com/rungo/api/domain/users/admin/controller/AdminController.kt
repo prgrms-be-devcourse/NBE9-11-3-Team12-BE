@@ -35,24 +35,25 @@ class AdminController(
 ) {
 
 
-    @PatchMapping("/{userId}/organizer")
-    @Operation(summary = "주최자 권한 승인", description = "관리자가 특정 사용자에게 ORGANIZER 권한을 부여합니다.")
+    @PatchMapping("/organizer-applications/{applicationId}/approve")
+    @Operation(summary = "주최자 권한 신청 승인", description = "관리자가 주최자 권한 신청을 승인합니다.")
     @ApiResponses(
         SwaggerResponse(responseCode = "200", description = "승인 성공"),
+        SwaggerResponse(responseCode = "400", description = "이미 처리된 신청 또는 이미 주최자 권한 보유"),
         SwaggerResponse(responseCode = "401", description = "인증 필요"),
         SwaggerResponse(responseCode = "403", description = "관리자 권한 필요"),
-        SwaggerResponse(responseCode = "404", description = "사용자 없음"),
-        SwaggerResponse(responseCode = "400", description = "이미 주최자 권한 보유"),
+        SwaggerResponse(responseCode = "404", description = "주최자 권한 신청 없음"),
     )
-    fun approveOrganizer(
-
+    fun approveOrganizerApplication(
         @AuthenticationPrincipal admin: SecurityUser,
-        @PathVariable userId: Long
-
+        @PathVariable applicationId: Long,
     ): ResponseEntity<ApiResponse<AdminApproveRes>> {
-        val adminApproveRes = adminService.approveOrganizer(admin.id, userId)
+        val response = adminService.approveOrganizerApplication(
+            adminId = admin.id,
+            applicationId = applicationId,
+        )
 
-        return ResponseEntity.ok(ApiResponse.ok(adminApproveRes))
+        return ResponseEntity.ok(ApiResponse.ok(response))
     }
 
     @PatchMapping("/organizer-applications/{applicationId}/reject")
