@@ -18,10 +18,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.test.util.ReflectionTestUtils
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
@@ -245,20 +250,259 @@ class AdminServiceTest {
         assertEquals(ErrorCode.ALREADY_PROCESSED_APPLICATION, exception.errorCode)
     }
 
-    private fun createApplication(
-        id: Long,
-        user: Users,
-        status: ApplicationStatus,
-    ): OrganizerApplication {
-        val application = OrganizerApplication.create(
-            user = user,
-            businessRegistrationNumber = "123-45-67890",
+    @Test
+    @DisplayName("주최자 권한 신청 목록 조회 성공 - status가 있으면 해당 상태 신청 목록을 조회한다")
+    fun getOrganizerApplicationsSuccessWithStatus() {
+        val admin = createUser(1L, "관리자", Role.ADMIN)
+        val applicant = createUser(2L, "참가자", Role.PARTICIPANT)
+        val requestedAt = LocalDateTime.of(2026, 5, 20, 12, 0)
+
+        val application = createApplication(
+            id = 10L,
+            user = applicant,
+            status = ApplicationStatus.PENDING,
+            requestedAt = requestedAt,
         )
 
-        ReflectionTestUtils.setField(application, "id", id)
-        ReflectionTestUtils.setField(application, "status", status)
+        val pageable = PageRequest.of(0, 20)
+        val sortedPageable = sortedPageable()
+        val page = PageImpl(listOf(application), sortedPageable, 1)
 
-        return application
+        given(userRepository.findById(1L)).willReturn(Optional.of(admin))
+        given(
+            organizerApplicationRepository.findAllByStatus(
+                ApplicationStatus.PENDING,
+                sortedPageable,
+            )
+        ).willReturn(page)
+
+        val result = adminService.getOrganizerApplications(
+            adminId = 1L,
+            status = ApplicationStatus.PENDING,
+            pageable = pageable,
+        )
+
+        assertEquals(1, result.content.size)
+        assertEquals(10L, result.content[0].applicationId)
+        assertEquals(2L, result.content[0].userId)
+        assertEquals("참가자", result.content[0].userName)
+        assertEquals("참가자@test.com", result.content[0].userEmail)
+        assertEquals("123-45-67890", result.content[0].businessRegistrationNumber)
+        assertEquals(ApplicationStatus.PENDING, result.content[0].status)
+        assertEquals(requestedAt, result.content[0].requestedAt)
+        assertEquals(0, result.page.page)
+        assertEquals(20, result.page.size)
+        assertEquals(1L, result.page.totalElements)
+        assertEquals(1, result.page.totalPages)
+
+        verify(userRepository).findById(1L)
+        verify(organizerApplicationRepository).findAllByStatus(
+            ApplicationStatus.PENDING,
+            sortedPageable,
+        )
+    }
+
+    @Test
+    @DisplayName("주최자 권한 신청 목록 조회 성공 - status별로 해당 상태 신청 목록을 조회한다")
+    fun getOrganizerApplicationsSuccessWithStatuses() {
+        val admin = createUser(1L, "관리자", Role.ADMIN)
+
+        val pendingApplicant = createUser(2L, "대기참가자", Role.PARTICIPANT)
+        val approvedApplicant = createUser(3L, "승인참가자", Role.PARTICIPANT)
+        val rejectedApplicant = createUser(4L, "거절참가자", Role.PARTICIPANT)
+
+        val pendingApplication = createApplication(
+            id = 10L,
+            user = pendingApplicant,
+            status = ApplicationStatus.PENDING,
+            requestedAt = LocalDateTime.of(2026, 5, 20, 12, 0),
+        )
+
+        val approvedApplication = createApplication(
+            id = 11L,
+            user = approvedApplicant,
+            status = ApplicationStatus.APPROVED,
+            requestedAt = LocalDateTime.of(2026, 5, 20, 13, 0),
+        )
+
+        val rejectedApplication = createApplication(
+            id = 12L,
+            user = rejectedApplicant,
+            status = ApplicationStatus.REJECTED,
+            requestedAt = LocalDateTime.of(2026, 5, 20, 14, 0),
+        )
+
+        val pageable = PageRequest.of(0, 20)
+        val sortedPageable = sortedPageable()
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(admin))
+
+        given(
+            organizerApplicationRepository.findAllByStatus(
+                ApplicationStatus.PENDING,
+                sortedPageable,
+            )
+        ).willReturn(PageImpl(listOf(pendingApplication), sortedPageable, 1))
+
+        given(
+            organizerApplicationRepository.findAllByStatus(
+                ApplicationStatus.APPROVED,
+                sortedPageable,
+            )
+        ).willReturn(PageImpl(listOf(approvedApplication), sortedPageable, 1))
+
+        given(
+            organizerApplicationRepository.findAllByStatus(
+                ApplicationStatus.REJECTED,
+                sortedPageable,
+            )
+        ).willReturn(PageImpl(listOf(rejectedApplication), sortedPageable, 1))
+
+        val pendingResult = adminService.getOrganizerApplications(
+            adminId = 1L,
+            status = ApplicationStatus.PENDING,
+            pageable = pageable,
+        )
+
+        val approvedResult = adminService.getOrganizerApplications(
+            adminId = 1L,
+            status = ApplicationStatus.APPROVED,
+            pageable = pageable,
+        )
+
+        val rejectedResult = adminService.getOrganizerApplications(
+            adminId = 1L,
+            status = ApplicationStatus.REJECTED,
+            pageable = pageable,
+        )
+
+        assertEquals(1, pendingResult.content.size)
+        assertEquals(10L, pendingResult.content[0].applicationId)
+        assertEquals(ApplicationStatus.PENDING, pendingResult.content[0].status)
+        assertEquals("대기참가자", pendingResult.content[0].userName)
+
+        assertEquals(1, approvedResult.content.size)
+        assertEquals(11L, approvedResult.content[0].applicationId)
+        assertEquals(ApplicationStatus.APPROVED, approvedResult.content[0].status)
+        assertEquals("승인참가자", approvedResult.content[0].userName)
+
+        assertEquals(1, rejectedResult.content.size)
+        assertEquals(12L, rejectedResult.content[0].applicationId)
+        assertEquals(ApplicationStatus.REJECTED, rejectedResult.content[0].status)
+        assertEquals("거절참가자", rejectedResult.content[0].userName)
+
+        verify(userRepository, times(3)).findById(1L)
+        verify(organizerApplicationRepository).findAllByStatus(ApplicationStatus.PENDING, sortedPageable)
+        verify(organizerApplicationRepository).findAllByStatus(ApplicationStatus.APPROVED, sortedPageable)
+        verify(organizerApplicationRepository).findAllByStatus(ApplicationStatus.REJECTED, sortedPageable)
+    }
+
+    @Test
+    @DisplayName("주최자 권한 신청 목록 조회 성공 - status가 없으면 전체 신청 목록을 조회한다")
+    fun getOrganizerApplicationsSuccessWithoutStatus() {
+        val admin = createUser(1L, "관리자", Role.ADMIN)
+
+        val pendingApplicant = createUser(2L, "대기참가자", Role.PARTICIPANT)
+        val approvedApplicant = createUser(3L, "승인참가자", Role.PARTICIPANT)
+        val rejectedApplicant = createUser(4L, "거절참가자", Role.PARTICIPANT)
+
+        val pendingApplication = createApplication(
+            id = 10L,
+            user = pendingApplicant,
+            status = ApplicationStatus.PENDING,
+            requestedAt = LocalDateTime.of(2026, 5, 20, 12, 0),
+        )
+
+        val approvedApplication = createApplication(
+            id = 11L,
+            user = approvedApplicant,
+            status = ApplicationStatus.APPROVED,
+            requestedAt = LocalDateTime.of(2026, 5, 20, 13, 0),
+        )
+
+        val rejectedApplication = createApplication(
+            id = 12L,
+            user = rejectedApplicant,
+            status = ApplicationStatus.REJECTED,
+            requestedAt = LocalDateTime.of(2026, 5, 20, 14, 0),
+        )
+
+        val pageable = PageRequest.of(0, 20)
+        val sortedPageable = sortedPageable()
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(admin))
+        given(organizerApplicationRepository.findAll(sortedPageable))
+            .willReturn(
+                PageImpl(
+                    listOf(pendingApplication, approvedApplication, rejectedApplication),
+                    sortedPageable,
+                    3,
+                )
+            )
+
+        val result = adminService.getOrganizerApplications(
+            adminId = 1L,
+            status = null,
+            pageable = pageable,
+        )
+
+        assertEquals(3, result.content.size)
+        assertEquals(10L, result.content[0].applicationId)
+        assertEquals(ApplicationStatus.PENDING, result.content[0].status)
+        assertEquals("대기참가자", result.content[0].userName)
+
+        assertEquals(11L, result.content[1].applicationId)
+        assertEquals(ApplicationStatus.APPROVED, result.content[1].status)
+        assertEquals("승인참가자", result.content[1].userName)
+
+        assertEquals(12L, result.content[2].applicationId)
+        assertEquals(ApplicationStatus.REJECTED, result.content[2].status)
+        assertEquals("거절참가자", result.content[2].userName)
+
+        assertEquals(0, result.page.page)
+        assertEquals(20, result.page.size)
+        assertEquals(3L, result.page.totalElements)
+        assertEquals(1, result.page.totalPages)
+
+        verify(userRepository).findById(1L)
+        verify(organizerApplicationRepository).findAll(sortedPageable)
+    }
+
+    @Test
+    @DisplayName("주최자 권한 신청 목록 조회 실패 - 관리자가 존재하지 않으면 USER_NOT_FOUND 예외가 발생한다")
+    fun getOrganizerApplicationsFailAdminNotFound() {
+        val pageable = PageRequest.of(0, 20)
+
+        given(userRepository.findById(1L)).willReturn(Optional.empty())
+
+        val exception = assertThrows(CustomException::class.java) {
+            adminService.getOrganizerApplications(
+                adminId = 1L,
+                status = ApplicationStatus.PENDING,
+                pageable = pageable,
+            )
+        }
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.errorCode)
+    }
+
+    @Test
+    @DisplayName("주최자 권한 신청 목록 조회 실패 - 관리자 권한이 아니면 FORBIDDEN 예외가 발생한다")
+    fun getOrganizerApplicationsFailNotAdmin() {
+        val user = createUser(1L, "참가자", Role.PARTICIPANT)
+        val pageable = PageRequest.of(0, 20)
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(user))
+
+        val exception = assertThrows(CustomException::class.java) {
+            adminService.getOrganizerApplications(
+                adminId = 1L,
+                status = null,
+                pageable = pageable,
+            )
+        }
+
+        assertEquals(ErrorCode.FORBIDDEN, exception.errorCode)
     }
 
     private fun createUser(
@@ -279,4 +523,47 @@ class AdminServiceTest {
 
         return user
     }
+
+    private fun createApplication(
+        id: Long,
+        user: Users,
+        status: ApplicationStatus,
+    ): OrganizerApplication {
+        val application = OrganizerApplication.create(
+            user = user,
+            businessRegistrationNumber = "123-45-67890",
+        )
+
+        ReflectionTestUtils.setField(application, "id", id)
+        ReflectionTestUtils.setField(application, "status", status)
+
+        return application
+    }
+
+    private fun createApplication(
+        id: Long,
+        user: Users,
+        status: ApplicationStatus,
+        requestedAt: LocalDateTime,
+    ): OrganizerApplication {
+        val application = createApplication(
+            id = id,
+            user = user,
+            status = status,
+        )
+
+        ReflectionTestUtils.setField(application, "requestedAt", requestedAt)
+
+        return application
+    }
+
+    private fun sortedPageable(): PageRequest =
+        PageRequest.of(
+            0,
+            20,
+            Sort.by(
+                Sort.Order.desc("requestedAt"),
+                Sort.Order.desc("id"),
+            )
+        )
 }
