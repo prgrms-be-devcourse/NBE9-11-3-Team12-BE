@@ -47,5 +47,9 @@ enum class ErrorCode(
     REGISTRATION_TERMS_REQUIRED(HttpStatus.BAD_REQUEST, "필수 약관 동의가 필요합니다."),
     CAPACITY_FULL(HttpStatus.BAD_REQUEST, "마라톤 참가 정원이 마감되었습니다."),
     REGISTRATION_ALREADY_CANCELED(HttpStatus.BAD_REQUEST, "이미 접수 취소한 대회입니다."),
-    CURRENT_COUNT_UNDERFLOW(HttpStatus.BAD_REQUEST, "코스 정원이 이미 0명입니다.")
+    CURRENT_COUNT_UNDERFLOW(HttpStatus.BAD_REQUEST, "코스 정원이 이미 0명입니다."),
+
+    // 관리자
+    ORGANIZER_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "주최자 권한 신청을 찾을 수 없습니다."),
+    ALREADY_PROCESSED_APPLICATION(HttpStatus.BAD_REQUEST, "이미 처리된 주최자 권한 신청입니다."),
 }

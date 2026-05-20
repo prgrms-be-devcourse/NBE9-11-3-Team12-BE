@@ -2,6 +2,8 @@ package com.rungo.api.domain.users.admin.controller
 
 import com.rungo.api.domain.marathon.marathon.service.MarathonCleanupService
 import com.rungo.api.domain.users.admin.dto.AdminApproveRes
+import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationReq
+import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationRes
 import com.rungo.api.domain.users.admin.service.AdminService
 import com.rungo.api.global.response.ApiResponse
 import com.rungo.api.global.security.SecurityUser
@@ -9,14 +11,11 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 
 @RestController
@@ -48,6 +47,31 @@ class AdminController(
         val adminApproveRes = adminService.approveOrganizer(admin.id, userId)
 
         return ResponseEntity.ok(ApiResponse.ok(adminApproveRes))
+    }
+
+    @PatchMapping("/organizer-applications/{applicationId}/reject")
+    @Operation(summary = "주최자 권한 거절", description = "관리자가 특정 사용자의 관리자 권한 신청을 거절합니다 .")
+    @ApiResponses(
+        SwaggerResponse(responseCode = "200", description = "주최자 권한 신청 거절 성공"),
+        SwaggerResponse(responseCode = "400", description = "이미 처리된 신청 또는 잘못된 요청"),
+        SwaggerResponse(responseCode = "401", description = "인증 필요"),
+        SwaggerResponse(responseCode = "403", description = "관리자 권한 필요"),
+        SwaggerResponse(responseCode = "404", description = "주최자 권한 신청 없음"),
+    )
+    fun rejectOrganizerApplication(
+        @AuthenticationPrincipal admin: SecurityUser,
+        @PathVariable applicationId: Long,
+        @Valid @RequestBody req: RejectOrganizerApplicationReq,
+    ): ResponseEntity<ApiResponse<RejectOrganizerApplicationRes>> {
+        val response = adminService.rejectOrganizerApplication(
+            adminId = admin.id,
+            applicationId = applicationId,
+            req = req,
+        )
+
+        return ResponseEntity.ok(
+            ApiResponse.ok(response)
+        )
     }
 
     @PostMapping("/cleanup")
