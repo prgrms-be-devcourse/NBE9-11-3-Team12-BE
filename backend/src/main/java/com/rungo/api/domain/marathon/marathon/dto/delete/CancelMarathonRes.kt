@@ -24,7 +24,6 @@ data class CancelMarathonRes(
     val courses: List<CancelCourseItemRes>
 ) {
     companion object {
-        @JvmStatic
         fun from(marathon: Marathon) = CancelMarathonRes(
             marathonId = marathon.id,
             title = marathon.title,

@@ -19,13 +19,10 @@ data class PageRes(
     val totalElements: Long,
 
     @field:Schema(description = "전체 페이지 수", example = "5")
-    @JvmField
     val totalPages: Int
 ) {
 
     companion object {
-
-        @JvmStatic
         fun from(page: Page<*>) = PageRes(
             page = page.number,
             size = page.size,

@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
 @Schema(description = "주최자 권한 승인 응답 DTO")
-@JvmRecord
 data class AdminApproveRes(
     @field:Schema(description = "사용자 ID", example = "1")
     val id: Long,
