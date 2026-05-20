@@ -1,5 +1,9 @@
 plugins {
 	java
+	kotlin("jvm") version "2.2.21"
+	kotlin("plugin.spring") version "2.2.21"
+	kotlin("plugin.jpa") version "2.2.21"
+	kotlin("plugin.lombok") version "2.2.21"
 	id("org.springframework.boot") version "3.5.13"
 	id("io.spring.dependency-management") version "1.1.7"
 }
@@ -18,6 +22,9 @@ repositories {
 }
 
 dependencies {
+	implementation(kotlin("reflect"))
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -57,4 +64,10 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+allOpen {
+	annotation("jakarta.persistence.Entity")
+	annotation("jakarta.persistence.MappedSuperclass")
+	annotation("jakarta.persistence.Embeddable")
 }
