@@ -1,0 +1,10 @@
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 16379
+      database: 1
+
+registration:
+  queue:
+    scheduler-enabled: false
