@@ -35,7 +35,7 @@ class RegistrationQueueRepositoryTest {
         assertThat(RegistrationQueueKeyGenerator.payload("request-1"))
             .isEqualTo("queue:registration:payload:request-1")
         assertThat(RegistrationQueueKeyGenerator.dedupe(2L, 3L))
-            .isEqualTo("queue:registration:dedupe:user:2:marathon:3")
+            .isEqualTo("queue:registration:dedupe:user:2:course:3")
     }
 
     @Test
@@ -77,7 +77,6 @@ class RegistrationQueueRepositoryTest {
         val requestId = "request-payload"
         val payload = RegistrationQueuePayload(
             userId = 1L,
-            marathonId = 2L,
             courseId = 3L,
             snapZipCode = "12345",
             snapAddress = "서울시 강남구",
@@ -130,18 +129,18 @@ class RegistrationQueueRepositoryTest {
     }
 
     @Test
-    @DisplayName("dedupe 저장 성공 - 같은 사용자와 같은 마라톤 조합은 한 번만 저장할 수 있다")
+    @DisplayName("dedupe 저장 성공 - 같은 사용자와 같은 코스 조합은 한 번만 저장할 수 있다")
     fun dedupe_try_set_and_exists_success() {
         val userId = 1L
-        val marathonId = 2L
+        val courseId = 2L
 
-        assertThat(registrationQueueRepository.trySetDedupe(userId, marathonId, "request-1", 5)).isTrue()
-        assertThat(registrationQueueRepository.trySetDedupe(userId, marathonId, "request-2", 5)).isFalse()
-        assertThat(registrationQueueRepository.existsDedupe(userId, marathonId)).isTrue()
+        assertThat(registrationQueueRepository.trySetDedupe(userId, courseId, "request-1", 5)).isTrue()
+        assertThat(registrationQueueRepository.trySetDedupe(userId, courseId, "request-2", 5)).isFalse()
+        assertThat(registrationQueueRepository.existsDedupe(userId, courseId)).isTrue()
 
-        registrationQueueRepository.deleteDedupe(userId, marathonId)
+        registrationQueueRepository.deleteDedupe(userId, courseId)
 
-        assertThat(registrationQueueRepository.existsDedupe(userId, marathonId)).isFalse()
+        assertThat(registrationQueueRepository.existsDedupe(userId, courseId)).isFalse()
     }
 
     @Test

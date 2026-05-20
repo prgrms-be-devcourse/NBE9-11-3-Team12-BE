@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.rungo.api.domain.marathon.course.entity.Course
-import com.rungo.api.domain.marathon.course.repository.CourseRepository
 import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq
@@ -41,13 +40,9 @@ import java.math.BigDecimal
 import java.sql.SQLException
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class RegistrationQueueServiceTest {
-
-    @Mock
-    private lateinit var courseRepository: CourseRepository
 
     @Mock
     private lateinit var registrationService: RegistrationService
@@ -80,7 +75,6 @@ class RegistrationQueueServiceTest {
         )
         registrationQueueService = RegistrationQueueService(
             registrationQueueRepository = registrationQueueRepository,
-            courseRepository = courseRepository,
             registrationService = registrationService,
             properties = properties
         )
@@ -95,16 +89,7 @@ class RegistrationQueueServiceTest {
     @Test
     @DisplayName("대기열 적재 성공 - payload 저장 후 waiting queue와 active course에 등록한다")
     fun enqueue_success() {
-        val marathon = createMarathon(
-            registrationStartAt = LocalDateTime.now().minusDays(1),
-            registrationEndAt = LocalDateTime.now().plusDays(1),
-            status = MarathonStatus.OPEN
-        ).also { setField(it, "id", 20L) }
-        val course = createCourse(marathon = marathon, capacity = 100, currentCount = 10)
-            .also { setField(it, "id", 10L) }
         val request = createRegistrationRequest(courseId = 10L)
-
-        given(courseRepository.findById(10L)).willReturn(Optional.of(course))
 
         val requestId = registrationQueueService.enqueue(1L, request)
 
@@ -112,7 +97,6 @@ class RegistrationQueueServiceTest {
 
         assertThat(savedPayload).isNotNull
         assertThat(savedPayload!!.userId).isEqualTo(1L)
-        assertThat(savedPayload.marathonId).isEqualTo(20L)
         assertThat(savedPayload.courseId).isEqualTo(10L)
         assertThat(savedPayload.snapZipCode).isEqualTo("12345")
         assertThat(savedPayload.snapAddress).isEqualTo("서울시 강남구")
@@ -122,37 +106,13 @@ class RegistrationQueueServiceTest {
         assertThat(registrationQueueRepository.peekWaitingRequestId(10L)).isEqualTo(requestId)
         assertThat(registrationQueueRepository.waitingSize(10L)).isEqualTo(1)
         assertThat(registrationQueueRepository.findActiveCourseIds()).containsExactly(10L)
-        assertThat(registrationQueueRepository.existsDedupe(1L, 20L)).isTrue()
+        assertThat(registrationQueueRepository.existsDedupe(1L, 10L)).isTrue()
     }
 
     @Test
-    @DisplayName("대기열 적재 실패 - 코스가 없으면 COURSE_NOT_FOUND 예외가 발생하고 queue 데이터가 남지 않는다")
-    fun enqueue_fail_course_not_found() {
-        val request = createRegistrationRequest(courseId = 99L)
-        given(courseRepository.findById(99L)).willReturn(Optional.empty())
-
-        val exception = assertThrows<CustomException> {
-            registrationQueueService.enqueue(1L, request)
-        }
-
-        assertThat(exception.errorCode).isEqualTo(ErrorCode.COURSE_NOT_FOUND)
-        assertThat(registrationQueueRepository.findActiveCourseIds()).isEmpty()
-        assertThat(registrationQueueRepository.waitingSize(99L)).isZero()
-    }
-
-    @Test
-    @DisplayName("대기열 적재 실패 - 같은 사용자와 같은 마라톤 요청은 한 번만 적재할 수 있다")
+    @DisplayName("대기열 적재 실패 - 같은 사용자와 같은 코스 요청은 한 번만 적재할 수 있다")
     fun enqueue_fail_duplicate_request() {
-        val marathon = createMarathon(
-            registrationStartAt = LocalDateTime.now().minusDays(1),
-            registrationEndAt = LocalDateTime.now().plusDays(1),
-            status = MarathonStatus.OPEN
-        ).also { setField(it, "id", 20L) }
-        val course = createCourse(marathon = marathon, capacity = 100, currentCount = 10)
-            .also { setField(it, "id", 10L) }
         val request = createRegistrationRequest(courseId = 10L)
-
-        given(courseRepository.findById(10L)).willReturn(Optional.of(course))
 
         registrationQueueService.enqueue(1L, request)
 
@@ -163,7 +123,7 @@ class RegistrationQueueServiceTest {
         assertThat(exception.errorCode).isEqualTo(ErrorCode.REGISTRATION_ALREADY_EXISTS)
         assertThat(registrationQueueRepository.waitingSize(10L)).isEqualTo(1)
         assertThat(registrationQueueRepository.findActiveCourseIds()).containsExactly(10L)
-        assertThat(registrationQueueRepository.existsDedupe(1L, 20L)).isTrue()
+        assertThat(registrationQueueRepository.existsDedupe(1L, 10L)).isTrue()
     }
 
     @Test
@@ -172,24 +132,14 @@ class RegistrationQueueServiceTest {
         val mockedQueueRepository = mock(RegistrationQueueRepository::class.java)
         val localService = RegistrationQueueService(
             registrationQueueRepository = mockedQueueRepository,
-            courseRepository = courseRepository,
             registrationService = registrationService,
             properties = properties
         )
-        val marathon = createMarathon(
-            registrationStartAt = LocalDateTime.now().minusDays(1),
-            registrationEndAt = LocalDateTime.now().plusDays(1),
-            status = MarathonStatus.OPEN
-        ).also { setField(it, "id", 20L) }
-        val course = createCourse(marathon = marathon, capacity = 100, currentCount = 10)
-            .also { setField(it, "id", 10L) }
         val request = createRegistrationRequest(courseId = 10L)
-
-        given(courseRepository.findById(10L)).willReturn(Optional.of(course))
         given(
             mockedQueueRepository.trySetDedupe(
                 org.mockito.ArgumentMatchers.eq(1L),
-                org.mockito.ArgumentMatchers.eq(20L),
+                org.mockito.ArgumentMatchers.eq(10L),
                 org.mockito.ArgumentMatchers.anyString(),
                 org.mockito.ArgumentMatchers.eq(5L)
             )
@@ -218,7 +168,7 @@ class RegistrationQueueServiceTest {
         verify(mockedQueueRepository).deletePayload(org.mockito.ArgumentMatchers.anyString())
         verify(mockedQueueRepository).deleteDedupe(
             org.mockito.ArgumentMatchers.eq(1L),
-            org.mockito.ArgumentMatchers.eq(20L)
+            org.mockito.ArgumentMatchers.eq(10L)
         )
         verify(mockedQueueRepository, never()).addActiveCourse(org.mockito.ArgumentMatchers.eq(10L))
     }
@@ -229,7 +179,6 @@ class RegistrationQueueServiceTest {
         val requestId = "request-1"
         val payload = RegistrationQueuePayload(
             userId = 1L,
-            marathonId = 20L,
             courseId = 10L,
             snapZipCode = "12345",
             snapAddress = "서울시 강남구",
@@ -249,7 +198,7 @@ class RegistrationQueueServiceTest {
         )
 
         registrationQueueRepository.savePayload(requestId, payload)
-        registrationQueueRepository.trySetDedupe(1L, 20L, requestId, 5)
+        registrationQueueRepository.trySetDedupe(1L, 10L, requestId, 5)
         registrationQueueRepository.tryMarkProcessing(requestId)
         given(registrationService.create(1L, request)).willReturn(response)
 
@@ -263,7 +212,7 @@ class RegistrationQueueServiceTest {
         assertThat(result.errorCode).isNull()
         assertThat(registrationQueueRepository.findPayload(requestId)).isNull()
         assertThat(registrationQueueRepository.isProcessing(requestId)).isFalse()
-        assertThat(registrationQueueRepository.existsDedupe(1L, 20L)).isFalse()
+        assertThat(registrationQueueRepository.existsDedupe(1L, 10L)).isFalse()
     }
 
     @Test
@@ -272,7 +221,6 @@ class RegistrationQueueServiceTest {
         val requestId = "request-2"
         val payload = RegistrationQueuePayload(
             userId = 1L,
-            marathonId = 20L,
             courseId = 10L,
             snapZipCode = "12345",
             snapAddress = "서울시 강남구",
@@ -283,7 +231,7 @@ class RegistrationQueueServiceTest {
         val request = createRegistrationRequest(courseId = 10L)
 
         registrationQueueRepository.savePayload(requestId, payload)
-        registrationQueueRepository.trySetDedupe(1L, 20L, requestId, 5)
+        registrationQueueRepository.trySetDedupe(1L, 10L, requestId, 5)
         registrationQueueRepository.tryMarkProcessing(requestId)
         given(registrationService.create(1L, request))
             .willThrow(CustomException(ErrorCode.CAPACITY_FULL))
@@ -298,7 +246,7 @@ class RegistrationQueueServiceTest {
         assertThat(result.errorCode).isEqualTo(ErrorCode.CAPACITY_FULL.name)
         assertThat(registrationQueueRepository.findPayload(requestId)).isNull()
         assertThat(registrationQueueRepository.isProcessing(requestId)).isFalse()
-        assertThat(registrationQueueRepository.existsDedupe(1L, 20L)).isFalse()
+        assertThat(registrationQueueRepository.existsDedupe(1L, 10L)).isFalse()
     }
 
     @Test
@@ -307,17 +255,9 @@ class RegistrationQueueServiceTest {
         val mockedQueueRepository = mock(RegistrationQueueRepository::class.java)
         val localService = RegistrationQueueService(
             registrationQueueRepository = mockedQueueRepository,
-            courseRepository = courseRepository,
             registrationService = registrationService,
             properties = properties
         )
-        val marathon = createMarathon(
-            registrationStartAt = LocalDateTime.now().minusDays(1),
-            registrationEndAt = LocalDateTime.now().plusDays(1),
-            status = MarathonStatus.OPEN
-        ).also { setField(it, "id", 20L) }
-        val course = createCourse(marathon = marathon, capacity = 100, currentCount = 10)
-            .also { setField(it, "id", 10L) }
         val request = createRegistrationRequest(courseId = 10L)
         val response = CreateRegistrationRes(
             registrationId = 1L,
@@ -329,11 +269,10 @@ class RegistrationQueueServiceTest {
             appliedAt = LocalDateTime.of(2026, 5, 19, 12, 0)
         )
 
-        given(courseRepository.findById(10L)).willReturn(Optional.of(course))
         given(
             mockedQueueRepository.trySetDedupe(
                 org.mockito.ArgumentMatchers.eq(1L),
-                org.mockito.ArgumentMatchers.eq(20L),
+                org.mockito.ArgumentMatchers.eq(10L),
                 org.mockito.ArgumentMatchers.anyString(),
                 org.mockito.ArgumentMatchers.eq(5L)
             )
@@ -360,24 +299,15 @@ class RegistrationQueueServiceTest {
         val mockedQueueRepository = mock(RegistrationQueueRepository::class.java)
         val localService = RegistrationQueueService(
             registrationQueueRepository = mockedQueueRepository,
-            courseRepository = courseRepository,
             registrationService = registrationService,
             properties = properties
         )
-        val marathon = createMarathon(
-            registrationStartAt = LocalDateTime.now().minusDays(1),
-            registrationEndAt = LocalDateTime.now().plusDays(1),
-            status = MarathonStatus.OPEN
-        ).also { setField(it, "id", 20L) }
-        val course = createCourse(marathon = marathon, capacity = 100, currentCount = 10)
-            .also { setField(it, "id", 10L) }
         val request = createRegistrationRequest(courseId = 10L)
 
-        given(courseRepository.findById(10L)).willReturn(Optional.of(course))
         given(
             mockedQueueRepository.trySetDedupe(
                 org.mockito.ArgumentMatchers.eq(1L),
-                org.mockito.ArgumentMatchers.eq(20L),
+                org.mockito.ArgumentMatchers.eq(10L),
                 org.mockito.ArgumentMatchers.anyString(),
                 org.mockito.ArgumentMatchers.eq(5L)
             )
@@ -406,7 +336,6 @@ class RegistrationQueueServiceTest {
         val requestId = "request-3"
         val payload = RegistrationQueuePayload(
             userId = 1L,
-            marathonId = 20L,
             courseId = 10L,
             snapZipCode = "12345",
             snapAddress = "서울시 강남구",
@@ -425,7 +354,7 @@ class RegistrationQueueServiceTest {
         )
 
         registrationQueueRepository.savePayload(requestId, payload)
-        registrationQueueRepository.trySetDedupe(1L, 20L, requestId, 5)
+        registrationQueueRepository.trySetDedupe(1L, 10L, requestId, 5)
         registrationQueueRepository.tryMarkProcessing(requestId)
         given(registrationService.create(1L, request)).willThrow(exception)
 
@@ -439,7 +368,7 @@ class RegistrationQueueServiceTest {
         assertThat(result.errorCode).isEqualTo(ErrorCode.REGISTRATION_ALREADY_EXISTS.name)
         assertThat(registrationQueueRepository.findPayload(requestId)).isNull()
         assertThat(registrationQueueRepository.isProcessing(requestId)).isFalse()
-        assertThat(registrationQueueRepository.existsDedupe(1L, 20L)).isFalse()
+        assertThat(registrationQueueRepository.existsDedupe(1L, 10L)).isFalse()
     }
 
     private fun objectMapper(): ObjectMapper =
