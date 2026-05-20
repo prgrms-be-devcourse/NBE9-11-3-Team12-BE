@@ -2,9 +2,9 @@ package com.rungo.api.domain.users.admin.controller
 
 import com.rungo.api.domain.marathon.marathon.service.MarathonCleanupService
 import com.rungo.api.domain.users.admin.dto.AdminApproveRes
+import com.rungo.api.domain.users.admin.dto.AdminOrganizerApplicationListRes
 import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationReq
 import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationRes
-import com.rungo.api.domain.users.admin.dto.AdminOrganizerApplicationListRes
 import com.rungo.api.domain.users.admin.service.AdminService
 import com.rungo.api.domain.users.organizerApplication.status.ApplicationStatus
 import com.rungo.api.global.response.ApiResponse
@@ -21,12 +21,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.*
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.*
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 
@@ -62,7 +56,7 @@ class AdminController(
     }
 
     @PatchMapping("/organizer-applications/{applicationId}/reject")
-    @Operation(summary = "주최자 권한 거절", description = "관리자가 특정 사용자의 관리자 권한 신청을 거절합니다 .")
+    @Operation(summary = "주최자 권한 거절", description = "관리자가 특정 사용자의 주최자 권한 신청을 거절합니다 .")
     @ApiResponses(
         SwaggerResponse(responseCode = "200", description = "주최자 권한 신청 거절 성공"),
         SwaggerResponse(responseCode = "400", description = "이미 처리된 신청 또는 잘못된 요청"),
