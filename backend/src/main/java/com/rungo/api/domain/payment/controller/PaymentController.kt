@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerResponse
 class PaymentController(
     private val paymentService: PaymentService,
 ) {
+    // 토스 결제 승인 요청
     @PostMapping("/confirm")
     @Operation(
         summary = "토스 결제 승인",
