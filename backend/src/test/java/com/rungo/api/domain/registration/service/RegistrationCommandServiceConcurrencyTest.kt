@@ -290,7 +290,7 @@ class RegistrationCommandServiceConcurrencyTest {
         )
 
     private fun saveRegistration(user: Users, course: Course, marathon: Marathon): Registration =
-        Registration.create(
+        Registration.createCompleted(
             user = user,
             course = course,
             marathon = marathon,

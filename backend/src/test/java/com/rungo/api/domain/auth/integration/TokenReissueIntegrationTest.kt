@@ -1,6 +1,9 @@
 package com.rungo.api.domain.auth.integration
 
 import com.rungo.api.domain.auth.service.RefreshTokenService
+import com.rungo.api.domain.users.entity.Users
+import com.rungo.api.domain.users.enumtype.Gender
+import com.rungo.api.domain.users.repository.UserRepository
 import com.rungo.api.global.util.JwtUtil
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -12,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mock.web.MockCookie
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import java.time.LocalDate
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -26,15 +30,29 @@ class TokenReissueIntegrationTest {
     @Autowired
     private lateinit var refreshTokenService: RefreshTokenService
 
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
     @Value("\${jwt.secret}")
     private lateinit var jwtSecret: String
 
     @Test
     @DisplayName("동시에 토큰 재발급 요청이 들어와도 하나만 성공해야 한다")
     fun concurrentTokenReissueTest() {
-        val userId = 1L
-        val refreshToken = JwtUtil.generateRefreshToken(userId, "test@test.com", jwtSecret)
+        val user = userRepository.save(
+            Users.create(
+                email = "reissue-${System.nanoTime()}@test.com",
+                name = "테스트",
+                phoneNumber = "010-1111-2222",
+                gender = Gender.MALE,
+                birth = LocalDate.of(2000, 1, 1),
+            )
+        )
+        val userId = user.id
+        val refreshToken = JwtUtil.generateRefreshToken(userId, user.email, jwtSecret)
         refreshTokenService.saveRefreshToken(userId, refreshToken)
+
+        Thread.sleep(1_100)
 
         val threadCount = 5 // 동시 요청 수
         val executorService = Executors.newFixedThreadPool(threadCount)
@@ -73,6 +91,7 @@ class TokenReissueIntegrationTest {
         val successCount = statusCodes.count { it == 200 }
         val failCount = statusCodes.count { it == 409 || it == 401 || it == 404 }
 
+        assertThat(statusCodes).hasSize(threadCount)
         assertThat(successCount).isEqualTo(1) // 1번만 성공해야 한다.
         assertThat(failCount).isEqualTo(threadCount - 1)
     }

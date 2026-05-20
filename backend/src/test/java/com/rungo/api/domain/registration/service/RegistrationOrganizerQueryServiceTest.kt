@@ -16,13 +16,14 @@ import com.rungo.api.global.exception.CustomException
 import com.rungo.api.global.exception.ErrorCode
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.*
 import org.mockito.BDDMockito.given
-import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -37,7 +38,6 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 class RegistrationOrganizerQueryServiceTest {
 
-    @InjectMocks
     private lateinit var registrationOrganizerQueryService: RegistrationOrganizerQueryService
 
     @Mock
@@ -48,6 +48,15 @@ class RegistrationOrganizerQueryServiceTest {
 
     @Mock
     private lateinit var courseRepository: CourseRepository
+
+    @BeforeEach
+    fun setUp() {
+        registrationOrganizerQueryService = RegistrationOrganizerQueryService(
+            registrationRepository = registrationRepository,
+            marathonRepository = marathonRepository,
+            courseRepository = courseRepository,
+        )
+    }
 
     @Test
     @DisplayName("접수 요약 조회 성공 - 마라톤 정보와 코스별 집계가 정상 반환된다")
@@ -119,7 +128,7 @@ class RegistrationOrganizerQueryServiceTest {
         val marathon = createMarathon(marathonId, organizer)
         val course = createCourse(courseId, marathon, "10K", 50000, 100, 10)
 
-        val registration = Registration.create(
+        val registration = Registration.createCompleted(
             participant,
             course,
             marathon,
@@ -141,10 +150,11 @@ class RegistrationOrganizerQueryServiceTest {
         given(marathonRepository.findById(marathonId))
             .willReturn(Optional.of(marathon))
         given(
-            registrationRepository.findByMarathon_IdAndCourse_IdAndSnapNameContaining(
+            registrationRepository.findByMarathon_IdAndCourse_IdAndSnapNameContainingAndStatus(
                 marathonId,
                 courseId,
                 "홍길동",
+                RegistrationStatus.COMPLETED,
                 pageable
             )
         ).willReturn(page)
@@ -158,22 +168,12 @@ class RegistrationOrganizerQueryServiceTest {
                 pageable
             )
 
-        verify(registrationRepository).findByMarathon_IdAndCourse_IdAndSnapNameContaining(
+        verify(registrationRepository).findByMarathon_IdAndCourse_IdAndSnapNameContainingAndStatus(
             marathonId,
             courseId,
             "홍길동",
+            RegistrationStatus.COMPLETED,
             pageable
-        )
-        verify(registrationRepository, never()).findByMarathon_Id(anyLong(), anyPageable())
-        verify(registrationRepository, never()).findByMarathon_IdAndCourse_Id(
-            anyLong(),
-            anyLong(),
-            anyPageable()
-        )
-        verify(registrationRepository, never()).findByMarathon_IdAndSnapNameContaining(
-            anyLong(),
-            anyString(),
-            anyPageable()
         )
 
         assertNotNull(result)
@@ -206,7 +206,7 @@ class RegistrationOrganizerQueryServiceTest {
         val marathon = createMarathon(marathonId, organizer)
         val course = createCourse(101L, marathon, "10K", 50000, 100, 10)
 
-        val registration = Registration.create(
+        val registration = Registration.createCompleted(
             participant,
             course,
             marathon,
@@ -225,8 +225,13 @@ class RegistrationOrganizerQueryServiceTest {
 
         given(marathonRepository.findById(marathonId))
             .willReturn(Optional.of(marathon))
-        given(registrationRepository.findByIdAndMarathon_Id(registrationId, marathonId))
-            .willReturn(registration)
+        given(
+            registrationRepository.findByIdAndMarathon_IdAndStatus(
+                registrationId,
+                marathonId,
+                RegistrationStatus.COMPLETED,
+            )
+        ).willReturn(registration)
 
         val result = registrationOrganizerQueryService.getMarathonParticipantDetail(
             organizerId,
@@ -312,8 +317,13 @@ class RegistrationOrganizerQueryServiceTest {
 
         given(marathonRepository.findById(marathonId))
             .willReturn(Optional.of(marathon))
-        given(registrationRepository.findByIdAndMarathon_Id(registrationId, marathonId))
-            .willReturn(null)
+        given(
+            registrationRepository.findByIdAndMarathon_IdAndStatus(
+                registrationId,
+                marathonId,
+                RegistrationStatus.COMPLETED,
+            )
+        ).willReturn(null)
 
         val exception = assertThrows(CustomException::class.java) {
             registrationOrganizerQueryService.getMarathonParticipantDetail(
@@ -383,8 +393,4 @@ class RegistrationOrganizerQueryServiceTest {
         return course
     }
 
-    private fun anyPageable(): Pageable {
-        any(Pageable::class.java)
-        return PageRequest.of(0, 20)
-    }
 }

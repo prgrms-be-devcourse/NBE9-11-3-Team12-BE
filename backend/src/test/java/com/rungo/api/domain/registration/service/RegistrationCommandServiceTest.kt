@@ -6,9 +6,14 @@ import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus
 import com.rungo.api.domain.marathon.marathon.repository.MarathonRepository
 import com.rungo.api.domain.notification.event.RegistrationCompletedEvent
+import com.rungo.api.domain.payment.enumtype.PaymentCancelResult
+import com.rungo.api.domain.payment.repository.PaymentRepository
+import com.rungo.api.domain.payment.service.PaymentService
+import com.rungo.api.domain.payment.support.OrderIdGenerator
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq
 import com.rungo.api.domain.registration.entity.Registration
 import com.rungo.api.domain.registration.entity.RegistrationCancelHistory
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import com.rungo.api.domain.registration.repository.RegistrationCancelHistoryRepository
 import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
@@ -17,6 +22,7 @@ import com.rungo.api.domain.users.repository.UserRepository
 import com.rungo.api.global.exception.CustomException
 import com.rungo.api.global.exception.ErrorCode
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -24,7 +30,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.given
-import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -39,7 +44,6 @@ import java.util.*
 @ExtendWith(MockitoExtension::class)
 class RegistrationCommandServiceTest {
 
-    @InjectMocks
     private lateinit var registrationService: RegistrationService
 
     @Mock
@@ -58,7 +62,33 @@ class RegistrationCommandServiceTest {
     private lateinit var userRepository: UserRepository
 
     @Mock
+    private lateinit var paymentRepository: PaymentRepository
+
+    @Mock
+    private lateinit var paymentService: PaymentService
+
+    @Mock
+    private lateinit var orderIdGenerator: OrderIdGenerator
+
+    @Mock
     private lateinit var eventPublisher: ApplicationEventPublisher
+
+
+    @BeforeEach
+    fun setUp() {
+        registrationService = RegistrationService(
+            registrationRepository = registrationRepository,
+            registrationCancelHistoryRepository = registrationCancelHistoryRepository,
+            courseRepository = courseRepository,
+            marathonRepository = marathonRepository,
+            userRepository = userRepository,
+            paymentRepository = paymentRepository,
+            paymentService = paymentService,
+            orderIdGenerator = orderIdGenerator,
+            paymentExpireMinutes = 30L,
+            eventPublisher = eventPublisher,
+        )
+    }
 
     @Test
     @DisplayName("접수 생성 성공 - 저장과 응답 반환 및 코스 인원 증가가 정상 동작한다")
@@ -85,6 +115,7 @@ class RegistrationCommandServiceTest {
 
         given(userRepository.findById(1L)).willReturn(Optional.of(user))
         given(courseRepository.findById(3L)).willReturn(Optional.of(course))
+        given(marathonRepository.findByIdForUpdate(2L)).willReturn(marathon)
         given(courseRepository.increaseCurrentCountIfNotFull(3L)).willReturn(1)
         given(registrationRepository.save(any(Registration::class.java))).willReturn(savedRegistration)
 
@@ -112,7 +143,7 @@ class RegistrationCommandServiceTest {
         assertEquals("서울 마라톤", result.marathonTitle)
         assertEquals(3L, result.courseId)
         assertEquals("10K", result.courseType)
-        assertEquals("COMPLETED", result.status)
+        assertEquals(RegistrationStatus.COMPLETED, result.status)
         assertEquals(LocalDateTime.of(2026, 4, 15, 10, 0), result.appliedAt)
 
         verify(courseRepository, times(1)).increaseCurrentCountIfNotFull(3L)
@@ -174,6 +205,7 @@ class RegistrationCommandServiceTest {
 
         given(userRepository.findById(1L)).willReturn(Optional.of(user))
         given(courseRepository.findById(1L)).willReturn(Optional.of(course))
+        given(marathonRepository.findByIdForUpdate(2L)).willReturn(marathon)
 
         val exception = assertThrows<CustomException> {
             registrationService.create(1L, request)
@@ -196,6 +228,7 @@ class RegistrationCommandServiceTest {
 
         given(userRepository.findById(1L)).willReturn(Optional.of(user))
         given(courseRepository.findById(1L)).willReturn(Optional.of(course))
+        given(marathonRepository.findByIdForUpdate(2L)).willReturn(marathon)
 
         val exception = assertThrows<CustomException> {
             registrationService.create(1L, request)
@@ -218,6 +251,7 @@ class RegistrationCommandServiceTest {
 
         given(userRepository.findById(1L)).willReturn(Optional.of(user))
         given(courseRepository.findById(1L)).willReturn(Optional.of(course))
+        given(marathonRepository.findByIdForUpdate(2L)).willReturn(marathon)
 
         val exception = assertThrows<CustomException> {
             registrationService.create(1L, request)
@@ -241,6 +275,7 @@ class RegistrationCommandServiceTest {
 
         given(userRepository.findById(1L)).willReturn(Optional.of(user))
         given(courseRepository.findById(1L)).willReturn(Optional.of(course))
+        given(marathonRepository.findByIdForUpdate(2L)).willReturn(marathon)
         given(courseRepository.increaseCurrentCountIfNotFull(1L)).willReturn(0)
 
         val exception = assertThrows<CustomException> {
@@ -272,6 +307,8 @@ class RegistrationCommandServiceTest {
         }
 
         given(registrationRepository.findById(1L)).willReturn(Optional.of(registration))
+        given(paymentService.cancelPaymentForRegistration(1L, "사용자 접수 취소"))
+            .willReturn(PaymentCancelResult.NOT_FOUND)
 
         registrationService.cancel(1L, 1L)
 
@@ -392,7 +429,7 @@ class RegistrationCommandServiceTest {
         course: Course,
         marathon: Marathon,
         request: CreateRegistrationReq,
-    ): Registration = Registration.create(
+    ): Registration = Registration.createCompleted(
         user = user,
         course = course,
         marathon = marathon,
@@ -426,16 +463,20 @@ class RegistrationCommandServiceTest {
             posterImageUrl = "poster.png",
             registrationStartAt = registrationStartAt,
             registrationEndAt = registrationEndAt
-        ).also { setField(it, "status", status) }
+        ).also {
+            setField(it, "id", 2L)
+            setField(it, "status", status)
+        }
 
     private fun createCourse(
         marathon: Marathon,
         capacity: Int,
         currentCount: Int,
+        price: BigDecimal = BigDecimal.ZERO,
     ): Course =
         Course.create(
             courseType = "10K",
-            price = BigDecimal.valueOf(30000),
+            price = price,
             capacity = capacity,
             currentCount = currentCount
         ).also { marathon.addCourse(it) }
