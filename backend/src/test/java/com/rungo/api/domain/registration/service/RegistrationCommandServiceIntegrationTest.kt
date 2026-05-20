@@ -291,7 +291,7 @@ class RegistrationCommandServiceIntegrationTest {
         course: Course,
         marathon: Marathon
     ): Registration =
-        Registration.create(
+        Registration.createCompleted(
             user = user,
             course = course,
             marathon = marathon,
