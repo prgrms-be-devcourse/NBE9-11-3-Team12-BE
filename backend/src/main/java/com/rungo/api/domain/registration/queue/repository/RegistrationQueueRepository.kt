@@ -78,14 +78,14 @@ class RegistrationQueueRepository(
 
     fun processingCount(): Int = processingRequestsSet().size
 
-    fun trySetDedupe(userId: Long, marathonId: Long, requestId: String, ttlMinutes: Long): Boolean =
-        dedupeBucket(userId, marathonId).setIfAbsent(requestId, Duration.ofMinutes(ttlMinutes))
+    fun trySetDedupe(userId: Long, courseId: Long, requestId: String, ttlMinutes: Long): Boolean =
+        dedupeBucket(userId, courseId).setIfAbsent(requestId, Duration.ofMinutes(ttlMinutes))
 
-    fun existsDedupe(userId: Long, marathonId: Long): Boolean =
-        dedupeBucket(userId, marathonId).isExists
+    fun existsDedupe(userId: Long, courseId: Long): Boolean =
+        dedupeBucket(userId, courseId).isExists
 
-    fun deleteDedupe(userId: Long, marathonId: Long): Boolean =
-        dedupeBucket(userId, marathonId).delete()
+    fun deleteDedupe(userId: Long, courseId: Long): Boolean =
+        dedupeBucket(userId, courseId).delete()
 
     private fun activeCoursesSet(): RSet<String> =
         redissonClient.getSet(RegistrationQueueKeyGenerator.activeCourses(), StringCodec.INSTANCE)
@@ -108,9 +108,9 @@ class RegistrationQueueRepository(
             StringCodec.INSTANCE
         )
 
-    private fun dedupeBucket(userId: Long, marathonId: Long): RBucket<String> =
+    private fun dedupeBucket(userId: Long, courseId: Long): RBucket<String> =
         redissonClient.getBucket(
-            RegistrationQueueKeyGenerator.dedupe(userId, marathonId),
+            RegistrationQueueKeyGenerator.dedupe(userId, courseId),
             StringCodec.INSTANCE
         )
 }

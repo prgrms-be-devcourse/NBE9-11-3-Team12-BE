@@ -2,7 +2,6 @@ package com.rungo.api.domain.registration.queue.dto
 
 data class RegistrationQueuePayload(
     val userId: Long,
-    val marathonId: Long,
     val courseId: Long,
     val snapZipCode: String,
     val snapAddress: String,

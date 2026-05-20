@@ -25,10 +25,10 @@ object RegistrationQueueKeyGenerator {
     fun processingRequests(): String = PROCESSING_REQUESTS_KEY
 
     /**
-     * 같은 사용자와 같은 마라톤 조합의 중복 enqueue를 잠시 막기 위한 dedupe 키
+     * 같은 사용자와 같은 코스 조합의 중복 enqueue를 잠시 막기 위한 dedupe 키
      */
-    fun dedupe(userId: Long, marathonId: Long): String =
-        "$QUEUE_PREFIX:dedupe:user:$userId:marathon:$marathonId"
+    fun dedupe(userId: Long, courseId: Long): String =
+        "$QUEUE_PREFIX:dedupe:user:$userId:course:$courseId"
 
     private const val QUEUE_PREFIX = "queue:registration"
 

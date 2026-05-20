@@ -3,6 +3,7 @@ package com.rungo.api.domain.registration.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes
+import com.rungo.api.domain.registration.queue.service.RegistrationQueueService
 import com.rungo.api.domain.registration.service.RegistrationService
 import com.rungo.api.domain.users.enumtype.Role
 import com.rungo.api.global.exception.CustomException
@@ -43,6 +44,9 @@ class RegistrationCommandControllerTest {
     @MockitoBean
     private lateinit var registrationService: RegistrationService
 
+    @MockitoBean
+    private lateinit var registrationQueueService: RegistrationQueueService
+
     @AfterEach
     fun tearDown() {
         SecurityContextHolder.clearContext()
@@ -64,7 +68,7 @@ class RegistrationCommandControllerTest {
             LocalDateTime.of(2026, 4, 16, 9, 0)
         )
 
-        given(registrationService.create(1L, request)).willReturn(response)
+        given(registrationQueueService.create(1L, request)).willReturn(response)
 
         performCreate(request)
             .andExpect(status().isCreated)
@@ -78,7 +82,7 @@ class RegistrationCommandControllerTest {
             .andExpect(jsonPath("$.data.courseType").value("10K"))
             .andExpect(jsonPath("$.data.status").value("COMPLETED"))
 
-        verify(registrationService).create(1L, request)
+        verify(registrationQueueService).create(1L, request)
     }
 
     @Test
@@ -103,7 +107,7 @@ class RegistrationCommandControllerTest {
             .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
             .andExpect(jsonPath("$.data.courseId").exists())
 
-        verifyNoInteractions(registrationService)
+        verifyNoInteractions(registrationQueueService)
     }
 
     @Test
@@ -128,7 +132,7 @@ class RegistrationCommandControllerTest {
             .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
             .andExpect(jsonPath("$.data.snapZipCode").exists())
 
-        verifyNoInteractions(registrationService)
+        verifyNoInteractions(registrationQueueService)
     }
 
     @Test
@@ -153,7 +157,7 @@ class RegistrationCommandControllerTest {
             .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
             .andExpect(jsonPath("$.data.snapAddress").exists())
 
-        verifyNoInteractions(registrationService)
+        verifyNoInteractions(registrationQueueService)
     }
 
     @Test
@@ -178,7 +182,7 @@ class RegistrationCommandControllerTest {
             .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
             .andExpect(jsonPath("$.data.tSize").exists())
 
-        verifyNoInteractions(registrationService)
+        verifyNoInteractions(registrationQueueService)
     }
     @Test
     @DisplayName("접수 생성 실패 - 티셔츠 사이즈가 null이면 400 INVALID_INPUT_VALUE를 반환한다")
@@ -202,7 +206,7 @@ class RegistrationCommandControllerTest {
             .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
             .andExpect(jsonPath("$.message").value("필수 입력값이 누락되었습니다."))
 
-        verifyNoInteractions(registrationService)
+        verifyNoInteractions(registrationQueueService)
     }
 
     @Test
@@ -227,7 +231,7 @@ class RegistrationCommandControllerTest {
             .andExpect(jsonPath("$.code").value("INVALID_INPUT_VALUE"))
             .andExpect(jsonPath("$.data.agreedTerms").exists())
 
-        verifyNoInteractions(registrationService)
+        verifyNoInteractions(registrationQueueService)
     }
 
     @Test
@@ -236,7 +240,7 @@ class RegistrationCommandControllerTest {
         setAuthenticatedUser(1L)
 
         val request = createRegistrationRequest()
-        given(registrationService.create(1L, request))
+        given(registrationQueueService.create(1L, request))
             .willThrow(CustomException(ErrorCode.CAPACITY_FULL))
 
         performCreate(request)
@@ -252,7 +256,7 @@ class RegistrationCommandControllerTest {
         setAuthenticatedUser(1L)
 
         val request = createRegistrationRequest()
-        given(registrationService.create(1L, request))
+        given(registrationQueueService.create(1L, request))
             .willThrow(CustomException(ErrorCode.MARATHON_NOT_OPEN))
 
         performCreate(request)

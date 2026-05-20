@@ -17,13 +17,6 @@ class GlobalExceptionHandler {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object {
-        private const val REGISTRATION_DUPLICATE_CONSTRAINT = "uk_registration_user_marathon"
-        private const val REGISTRATION_CANCEL_HISTORY_DUPLICATE_CONSTRAINT =
-            "uk_registration_cancel_history_original_registration_id"
-        private const val MARATHON_DUPLICATE_CONSTRAINT = "uk_marathon_organizerId_title_eventDate"
-    }
-
     // 1. 비즈니스 예외 처리 (CustomException)
     @ExceptionHandler(CustomException::class)
     fun handleCustomException(e: CustomException): ResponseEntity<ApiResponse<Void?>> {
@@ -108,31 +101,9 @@ class GlobalExceptionHandler {
     fun handleDataIntegrityViolationException(
         e: DataIntegrityViolationException
     ): ResponseEntity<ApiResponse<Void?>> {
-        val ec = when {
-            // registration 중복 접수 제약조건 위반은 비즈니스 예외로 변환한다.
-            isConstraintViolation(e, REGISTRATION_DUPLICATE_CONSTRAINT) -> {
-                log.warn("Duplicate registration detected. constraintName={}", REGISTRATION_DUPLICATE_CONSTRAINT)
-                ErrorCode.REGISTRATION_ALREADY_EXISTS
-            }
-
-            isConstraintViolation(e, REGISTRATION_CANCEL_HISTORY_DUPLICATE_CONSTRAINT) -> {
-                log.warn(
-                    "Duplicate registration cancel history detected. constraintName={}",
-                    REGISTRATION_CANCEL_HISTORY_DUPLICATE_CONSTRAINT
-                )
-                ErrorCode.REGISTRATION_ALREADY_CANCELED
-            }
-
-            isConstraintViolation(e, MARATHON_DUPLICATE_CONSTRAINT) -> {
-                log.warn("Duplicate marathon detected. constraintName={}", MARATHON_DUPLICATE_CONSTRAINT)
-                ErrorCode.MARATHON_ALREADY_EXISTS
-            }
-
-            // 처리 대상이 아닌 다른 DB 무결성 예외는 시스템 예외로 응답한다.
-            else -> {
-                log.error("Unhandled DataIntegrityViolationException", e)
-                ErrorCode.INTERNAL_SERVER_ERROR
-            }
+        val ec = DataIntegrityViolationErrorCodeResolver.resolve(e) ?: run {
+            log.error("Unhandled DataIntegrityViolationException", e)
+            ErrorCode.INTERNAL_SERVER_ERROR
         }
 
         return ResponseEntity.status(ec.status)
@@ -148,31 +119,5 @@ class GlobalExceptionHandler {
 
         return ResponseEntity.status(ec.status)
             .body(ApiResponse.error(ec.status, ec.name, ec.message))
-    }
-
-    // 예외 원인 체인을 따라가며 기대한 DB 제약조건 위반인지 확인한다.
-    private fun isConstraintViolation(
-        throwable: Throwable,
-        expectedConstraintName: String
-    ): Boolean {
-        var current: Throwable? = throwable
-
-        while (current != null) {
-            // Hibernate 예외까지 내려가 실제 제약조건명을 확인한다.
-            if (current is org.hibernate.exception.ConstraintViolationException) {
-                val actualConstraintName = current.constraintName
-
-                // 찾던 이름과 일치할 때만 true 반환 (아니면 다음 cause로 계속 탐색)
-                if (actualConstraintName != null &&
-                    actualConstraintName.endsWith(expectedConstraintName)
-                ) {
-                    return true
-                }
-            }
-
-            current = current.cause
-        }
-
-        return false
     }
 }
