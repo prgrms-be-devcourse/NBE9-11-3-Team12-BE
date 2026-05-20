@@ -31,7 +31,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.times
@@ -87,7 +86,7 @@ class RegistrationCommandServiceTest {
             userRepository = userRepository,
             paymentRepository = paymentRepository,
             paymentService = paymentService,
-            orderIdGenerator = orderIdGenerator,
+            orderIdGenerator = OrderIdGenerator(),
             paymentExpireMinutes = 30L,
             eventPublisher = eventPublisher,
         )
@@ -191,7 +190,6 @@ class RegistrationCommandServiceTest {
         given(marathonRepository.findByIdForUpdate(2L)).willReturn(marathon)
         given(courseRepository.increaseCurrentCountIfNotFull(3L)).willReturn(1)
         given(registrationRepository.save(any(Registration::class.java))).willReturn(savedRegistration)
-        given(orderIdGenerator.generate(anyLong(), any(LocalDateTime::class.java))).willReturn("ORDER-1")
         given(paymentRepository.save(any(Payment::class.java))).willAnswer { invocation ->
             invocation.arguments[0] as Payment
         }
@@ -201,7 +199,8 @@ class RegistrationCommandServiceTest {
         assertEquals(4L, result.registrationId)
         assertEquals(RegistrationStatus.PENDING_PAYMENT, result.status)
         assertEquals(PaymentStatus.READY, result.paymentStatus)
-        assertEquals("ORDER-1", result.orderId)
+        assertNotNull(result.orderId)
+        assertTrue(result.orderId!!.startsWith("REG-4-"))
         assertEquals(30000L, result.amount)
 
         verify(registrationRepository, times(1)).save(any(Registration::class.java))

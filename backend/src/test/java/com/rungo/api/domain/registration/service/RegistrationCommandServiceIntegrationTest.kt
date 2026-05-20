@@ -273,7 +273,7 @@ class RegistrationCommandServiceIntegrationTest {
         val course =
             Course.create(
                 courseType = "10K",
-                price = BigDecimal.valueOf(30000),
+                price = BigDecimal.ZERO,
                 capacity = capacity,
                 currentCount = currentCount
             )
