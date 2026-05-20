@@ -8,6 +8,7 @@ import com.rungo.api.domain.marathon.marathon.entity.Marathon
 import com.rungo.api.domain.marathon.marathon.enumtype.MarathonStatus
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import com.rungo.api.domain.registration.queue.config.RegistrationQueueProperties
 import com.rungo.api.domain.registration.queue.dto.RegistrationQueuePayload
 import com.rungo.api.domain.registration.queue.dto.RegistrationQueueResult
@@ -193,7 +194,11 @@ class RegistrationQueueServiceTest {
             marathonTitle = "서울 마라톤",
             courseId = 10L,
             courseType = "10K",
-            status = "COMPLETED",
+            status = RegistrationStatus.COMPLETED,
+            paymentStatus = null,
+            orderId = null,
+            amount = null,
+            paymentDueAt = null,
             appliedAt = LocalDateTime.of(2026, 5, 19, 12, 0)
         )
 
@@ -265,7 +270,11 @@ class RegistrationQueueServiceTest {
             marathonTitle = "서울 마라톤",
             courseId = 10L,
             courseType = "10K",
-            status = "COMPLETED",
+            status = RegistrationStatus.COMPLETED,
+            paymentStatus = null,
+            orderId = null,
+            amount = null,
+            paymentDueAt = null,
             appliedAt = LocalDateTime.of(2026, 5, 19, 12, 0)
         )
 

@@ -201,7 +201,7 @@ class RegistrationCommandServiceIntegrationTest {
     private fun saveCourse(marathon: Marathon, capacity: Int, currentCount: Int): Course {
         val course = Course.create(
             courseType = "10K",
-            price = BigDecimal.valueOf(30000),
+            price = BigDecimal.ZERO,
             capacity = capacity,
             currentCount = currentCount
         )
@@ -213,7 +213,7 @@ class RegistrationCommandServiceIntegrationTest {
     }
 
     private fun saveRegistration(user: Users, course: Course, marathon: Marathon): Registration =
-        Registration.create(
+        Registration.createCompleted(
             user = user,
             course = course,
             marathon = marathon,

@@ -4,6 +4,7 @@ import com.rungo.api.domain.registration.queue.RegistrationQueueKeyGenerator
 import com.rungo.api.domain.registration.queue.dto.RegistrationQueuePayload
 import com.rungo.api.domain.registration.queue.dto.RegistrationQueueResult
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes
+import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
@@ -102,7 +103,11 @@ class RegistrationQueueRepositoryTest {
                 marathonTitle = "서울 마라톤",
                 courseId = 3L,
                 courseType = "10K",
-                status = "COMPLETED",
+                status = RegistrationStatus.COMPLETED,
+                paymentStatus = null,
+                orderId = null,
+                amount = null,
+                paymentDueAt = null,
                 appliedAt = LocalDateTime.of(2026, 5, 19, 12, 0)
             )
         )

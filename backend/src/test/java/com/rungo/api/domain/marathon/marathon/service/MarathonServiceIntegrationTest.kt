@@ -168,7 +168,7 @@ internal class MarathonServiceIntegrationTest {
         course: Course,
     ): Registration =
         registrationRepository.save(
-            Registration.create(
+            Registration.createCompleted(
                 user,
                 course,
                 marathon,
