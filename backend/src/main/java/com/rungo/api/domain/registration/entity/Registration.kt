@@ -92,7 +92,6 @@ class Registration protected constructor() {
 
     // 무료 접수용 Registration 생성 메서드 (상태 : COMPLETED)
     companion object {
-        @JvmStatic
         fun createCompleted(
             user: Users,
             course: Course,
@@ -115,7 +114,6 @@ class Registration protected constructor() {
         )
 
         // 유료 접수용 Registration 생성 메서드 (상태 : PENDING_PAYMENT)
-        @JvmStatic
         fun createPendingPayment(
             user: Users,
             course: Course,

@@ -57,7 +57,6 @@ data class CreateRegistrationRes(
             appliedAt = registration.appliedAt,
         )
 
-        @JvmStatic
         fun from(registration: Registration, payment: Payment) = CreateRegistrationRes(
             registrationId = registration.id,
             marathonId = registration.marathon.id,

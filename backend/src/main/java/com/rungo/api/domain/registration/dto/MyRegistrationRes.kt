@@ -1,5 +1,6 @@
 package com.rungo.api.domain.registration.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.marathon.dto.PageRes
 import com.rungo.api.domain.marathon.marathon.entity.Marathon
@@ -14,7 +15,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Schema(description = "내 접수 목록 조회 응답 DTO")
-@JvmRecord
 data class MyRegistrationRes(
 
     @field:Schema(description = "접수 목록")
@@ -28,7 +28,6 @@ data class MyRegistrationRes(
     companion object {
 
         // 정상 접수 목록 DTO 변환
-        @JvmStatic
         fun fromActive(
             page: Page<Registration>,
             paymentMap: Map<Long, Payment> = emptyMap(),
@@ -45,7 +44,6 @@ data class MyRegistrationRes(
         )
 
         // 접수 취소 목록 DTO 변환
-        @JvmStatic
         fun fromCanceled(
             page: Page<RegistrationCancelHistory>,
             marathonMap: Map<Long, Marathon>,
@@ -66,8 +64,7 @@ data class MyRegistrationRes(
 
     // ACTIVE, CANCELED 공통 구조 => 일부 필드는 null
     @Schema(description = "내 접수 목록 항목 DTO")
-    @JvmRecord
-    data class Item(
+        data class Item(
         @field:Schema(description = "정상 접수 조회 시 현재 접수 ID / 취소 이력 조회 시 취소 이력 ID", example = "100")
         val registrationId: Long,
 
@@ -140,6 +137,7 @@ data class MyRegistrationRes(
         @field:Schema(description = "접수 상세주소", example = "101동 202호")
         val snapDetail: String?,
 
+        @field:JsonProperty("tSize")
         @field:Schema(description = "티셔츠 사이즈", example = "L")
         val tSize: String,
 
@@ -156,8 +154,7 @@ data class MyRegistrationRes(
         // 정상 접수 Entity를 응답용 item 변환 (취소 전용 필드는 null : originalRegistrationId, canceledAt)
         companion object {
 
-            @JvmStatic
-            fun fromActive(
+                fun fromActive(
                 registration: Registration,
                 payment: Payment? = null,
                 now: LocalDateTime = LocalDateTime.now(),
@@ -199,8 +196,7 @@ data class MyRegistrationRes(
                 )
 
             // 취소 접수 Entity를 응답용 item 변환
-            @JvmStatic
-            fun fromCanceled(
+                fun fromCanceled(
                 history: RegistrationCancelHistory,
                 marathon: Marathon,
                 course: Course,

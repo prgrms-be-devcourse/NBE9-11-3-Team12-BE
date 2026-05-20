@@ -1,5 +1,6 @@
 package com.rungo.api.domain.registration.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.rungo.api.domain.marathon.marathon.dto.PageRes
 import com.rungo.api.domain.registration.entity.Registration
 import com.rungo.api.domain.registration.enumtype.RegistrationStatus
@@ -8,7 +9,6 @@ import org.springframework.data.domain.Page
 import java.time.LocalDateTime
 
 @Schema(description = "참가자 목록 조회 응답 DTO")
-@JvmRecord
 data class RegistrationParticipantListRes(
     @field:Schema(description = "참가자 목록")
     val content: List<Item>,
@@ -17,7 +17,6 @@ data class RegistrationParticipantListRes(
     val pageRes: PageRes,
 ) {
     companion object {
-        @JvmStatic
         fun from(page: Page<Registration>) = RegistrationParticipantListRes(
             content = page.content.map(Item::from),
             pageRes = PageRes.from(page),
@@ -25,8 +24,7 @@ data class RegistrationParticipantListRes(
     }
 
     @Schema(description = "참가자 목록 항목 DTO")
-    @JvmRecord
-    data class Item(
+        data class Item(
         @field:Schema(description = "접수 ID", example = "10")
         val registrationId: Long,
 
@@ -36,6 +34,7 @@ data class RegistrationParticipantListRes(
         @field:Schema(description = "참가자 전화번호", example = "010-1234-5678")
         val phoneNumber: String,
 
+        @field:JsonProperty("tSize")
         @field:Schema(description = "티셔츠 사이즈", example = "L")
         val tSize: String,
 
@@ -52,8 +51,7 @@ data class RegistrationParticipantListRes(
         val appliedAt: LocalDateTime,
     ) {
         companion object {
-            @JvmStatic
-            fun from(registration: Registration) = Item (
+                fun from(registration: Registration) = Item (
                 registrationId = registration.id,
                 name = registration.snapName,
                 phoneNumber = registration.snapPhoneNumber,

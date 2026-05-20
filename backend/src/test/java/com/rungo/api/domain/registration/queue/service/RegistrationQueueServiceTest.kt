@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.ResourceLock
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.mock
@@ -43,6 +44,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
+@ResourceLock("registration-queue-redis")
 class RegistrationQueueServiceTest {
 
     @Mock
@@ -57,7 +59,10 @@ class RegistrationQueueServiceTest {
     fun setUp() {
         redissonClient = Redisson.create(
             Config().apply {
-                useSingleServer().address = "redis://localhost:16379"
+                useSingleServer().apply {
+                    address = "redis://localhost:16379"
+                    database = 1
+                }
             }
         )
         properties = RegistrationQueueProperties(
