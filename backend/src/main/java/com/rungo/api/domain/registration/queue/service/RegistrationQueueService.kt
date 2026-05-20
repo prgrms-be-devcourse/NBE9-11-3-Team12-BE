@@ -1,6 +1,5 @@
 package com.rungo.api.domain.registration.queue.service
 
-import com.rungo.api.domain.marathon.course.repository.CourseRepository
 import com.rungo.api.domain.registration.dto.CreateRegistrationReq
 import com.rungo.api.domain.registration.dto.CreateRegistrationRes
 import com.rungo.api.domain.registration.queue.config.RegistrationQueueProperties
@@ -12,14 +11,12 @@ import com.rungo.api.global.exception.CustomException
 import com.rungo.api.global.exception.DataIntegrityViolationErrorCodeResolver
 import com.rungo.api.global.exception.ErrorCode
 import org.springframework.dao.DataIntegrityViolationException
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
 class RegistrationQueueService(
     private val registrationQueueRepository: RegistrationQueueRepository,
-    private val courseRepository: CourseRepository,
     private val registrationService: RegistrationService,
     private val properties: RegistrationQueueProperties
 ) {
@@ -28,25 +25,23 @@ class RegistrationQueueService(
     fun create(userId: Long, request: CreateRegistrationReq): CreateRegistrationRes {
         val requestId = enqueue(userId, request)
 
+
         return awaitResult(requestId)
     }
 
     // 접수 요청 원본을 저장한 뒤 코스별 대기열에 requestId를 넣는다.
     fun enqueue(userId: Long, request: CreateRegistrationReq): String {
-        val course = courseRepository.findByIdOrNull(request.courseId)
-            ?: throw CustomException(ErrorCode.COURSE_NOT_FOUND)
-        val marathonId = course.marathon.id
+        val courseId = request.courseId
         val requestId = UUID.randomUUID().toString()
 
-        // 같은 사용자와 같은 마라톤 요청은 한 번만 대기열에 넣는다.
-        if (!registrationQueueRepository.trySetDedupe(userId, marathonId, requestId, 5)) {
+        // 같은 사용자와 같은 코스 요청은 한 번만 대기열에 넣는다.
+        if (!registrationQueueRepository.trySetDedupe(userId, courseId, requestId, 5)) {
             throw CustomException(ErrorCode.REGISTRATION_ALREADY_EXISTS)
         }
 
         val payload = RegistrationQueuePayload(
             userId = userId,
-            marathonId = marathonId,
-            courseId = course.id,
+            courseId = courseId,
             snapZipCode = request.snapZipCode,
             snapAddress = request.snapAddress,
             snapDetail = request.snapDetail,
@@ -56,16 +51,16 @@ class RegistrationQueueService(
 
         try {
             registrationQueueRepository.savePayload(requestId, payload)
-            val enqueued = registrationQueueRepository.enqueue(course.id, requestId, createQueueScore())
+            val enqueued = registrationQueueRepository.enqueue(courseId, requestId, createQueueScore())
             if (!enqueued) {
                 throw IllegalStateException("registration queue enqueue failed")
             }
-            registrationQueueRepository.addActiveCourse(course.id)
+            registrationQueueRepository.addActiveCourse(courseId)
         } catch (e: RuntimeException) {
             // 중간에 실패하면 대기열에 남은 흔적을 지워 다시 시도할 수 있게 한다.
-            registrationQueueRepository.removeWaitingRequest(course.id, requestId)
+            registrationQueueRepository.removeWaitingRequest(courseId, requestId)
             registrationQueueRepository.deletePayload(requestId)
-            registrationQueueRepository.deleteDedupe(userId, marathonId)
+            registrationQueueRepository.deleteDedupe(userId, courseId)
             throw e
         }
 
@@ -98,13 +93,13 @@ class RegistrationQueueService(
         } finally {
             registrationQueueRepository.deleteProcessing(requestId)
             registrationQueueRepository.deletePayload(requestId)
-            registrationQueueRepository.deleteDedupe(payload.userId, payload.marathonId)
+            registrationQueueRepository.deleteDedupe(payload.userId, payload.courseId)
         }
     }
 
     private fun createQueueScore(): Double = System.currentTimeMillis().toDouble()
 
-    // 대기열에 넣은 뒤 실제 처리 결과가 저장될 때까지 짧게 반복 확인한다.
+    // (임시) 사용자에게는 접수 완료 응답이 바로 보이도록 여기서 결과를 기다린다.
     private fun awaitResult(requestId: String): CreateRegistrationRes {
         val deadline = System.currentTimeMillis() + (properties.processingTtl * 1000)
 
