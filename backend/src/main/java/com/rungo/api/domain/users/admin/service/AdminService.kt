@@ -65,7 +65,7 @@ class AdminService(
             ?: throw CustomException(ErrorCode.ORGANIZER_APPLICATION_NOT_FOUND)
 
         if (application.status != ApplicationStatus.PENDING) {
-            throw CustomException(ErrorCode.INVALID_INPUT_VALUE)
+            throw CustomException(ErrorCode.ALREADY_PROCESSED_APPLICATION)
         }
 
         application.reject(req.rejectReason)

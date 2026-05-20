@@ -51,5 +51,5 @@ enum class ErrorCode(
 
     // 관리자
     ORGANIZER_APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "주최자 권한 신청을 찾을 수 없습니다."),
-
+    ALREADY_PROCESSED_APPLICATION(HttpStatus.BAD_REQUEST, "이미 처리된 주최자 권한 신청입니다."),
 }
