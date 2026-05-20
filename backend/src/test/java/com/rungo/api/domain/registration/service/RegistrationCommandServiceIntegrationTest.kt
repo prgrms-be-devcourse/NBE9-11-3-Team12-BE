@@ -11,21 +11,18 @@ import com.rungo.api.domain.registration.repository.RegistrationRepository
 import com.rungo.api.domain.users.entity.Users
 import com.rungo.api.domain.users.enumtype.Gender
 import com.rungo.api.domain.users.repository.UserRepository
-import com.rungo.api.global.infrastructure.mail.EmailMessage
-import com.rungo.api.global.infrastructure.mail.EmailService
+import com.rungo.api.global.infrastructure.mail.entity.EmailOutboxStatus
+import com.rungo.api.global.infrastructure.mail.repository.EmailOutboxRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -52,11 +49,12 @@ class RegistrationCommandServiceIntegrationTest {
     @Autowired
     private lateinit var courseRepository: CourseRepository
 
-    @MockitoBean
-    private lateinit var emailService: EmailService
+    @Autowired
+    private lateinit var emailOutboxRepository: EmailOutboxRepository
 
     @AfterEach
     fun tearDown() {
+        emailOutboxRepository.deleteAllInBatch()
         registrationRepository.deleteAllInBatch()
         courseRepository.deleteAllInBatch()
         marathonRepository.deleteAllInBatch()
@@ -65,43 +63,64 @@ class RegistrationCommandServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("이메일 발송 실패가 발생해도 참가 접수 데이터는 정상 저장된다")
-    fun email_exception_isolation_test() {
-        doThrow(RuntimeException("SMTP 서버 강제 다운"))
-            .`when`(emailService)
-            .send(anyEmailMessage())
-
-        val organizer = saveOrganizer("organizer@test.com")
-        val participant = saveParticipant("participant@test.com")
-        val course = saveCourseWithMarathon(organizer)
-
-        val result = registrationService.create(participant.id, createRegistrationRequest(course.id))
-
-        assertThat(result.registrationId).isNotNull()
-        assertThat(result.marathonTitle).isEqualTo("서울 마라톤")
-        assertThat(result.courseType).isEqualTo("10K")
-        assertThat(registrationRepository.findById(result.registrationId)).isPresent
-        assertThat(findCourse(course.id).currentCount).isEqualTo(1)
-
-        verify(emailService, timeout(2000).atLeastOnce())
-            .send(anyEmailMessage())
-    }
-
-    @Test
-    @DisplayName("참가 접수 성공 시 이메일이 비동기로 발송되고 접수 데이터가 저장된다")
-    fun registration_success_email_send_test() {
+    @DisplayName("참가 접수 성공 시 Outbox에 이메일 발송 정보가 저장되고 접수 데이터가 저장된다")
+    fun registration_success_email_outbox_test() {
         val organizer = saveOrganizer("organizer-success@test.com")
         val participant = saveParticipant("participant-success@test.com")
         val course = saveCourseWithMarathon(organizer)
 
-        val result = registrationService.create(participant.id, createRegistrationRequest(course.id))
+        val result =
+            registrationService.create(
+                participant.id,
+                createRegistrationRequest(course.id)
+            )
 
         assertThat(result.registrationId).isNotNull()
-        assertThat(registrationRepository.findById(result.registrationId)).isPresent
-        assertThat(findCourse(course.id).currentCount).isEqualTo(1)
+        assertThat(registrationRepository.findById(result.registrationId))
+            .isPresent
+        assertThat(findCourse(course.id).currentCount)
+            .isEqualTo(1)
 
-        verify(emailService, timeout(2000).times(1))
-            .send(anyEmailMessage())
+        val outboxes =
+            emailOutboxRepository.findAll()
+                .filter { it.recipient == "participant-success@test.com" }
+
+        assertThat(outboxes).hasSize(1)
+
+        assertThat(outboxes[0].subject)
+            .contains("참가 접수 완료")
+        assertThat(outboxes[0].status)
+            .isEqualTo(EmailOutboxStatus.PENDING)
+    }
+
+    @Test
+    @DisplayName("Outbox 저장 구조에서도 참가 접수 데이터는 정상 저장된다")
+    fun email_outbox_isolation_test() {
+        val organizer = saveOrganizer("organizer@test.com")
+        val participant = saveParticipant("participant@test.com")
+        val course = saveCourseWithMarathon(organizer)
+
+        val result =
+            registrationService.create(
+                participant.id,
+                createRegistrationRequest(course.id)
+            )
+
+        assertThat(result.registrationId).isNotNull()
+        assertThat(result.marathonTitle)
+            .isEqualTo("서울 마라톤")
+        assertThat(result.courseType)
+            .isEqualTo("10K")
+        assertThat(registrationRepository.findById(result.registrationId))
+            .isPresent
+        assertThat(findCourse(course.id).currentCount)
+            .isEqualTo(1)
+
+        val outboxes =
+            emailOutboxRepository.findAll()
+                .filter { it.recipient == "participant@test.com" }
+
+        assertThat(outboxes).hasSize(1)
     }
 
     @Test
@@ -110,12 +129,22 @@ class RegistrationCommandServiceIntegrationTest {
         val organizer = saveOrganizer("organizer-db@test.com")
         val participant = saveParticipant("participant-db@test.com")
         val marathon = saveMarathon(organizer, "서울 마라톤")
-        val course = saveCourse(marathon, capacity = 10, currentCount = 0)
+        val course =
+            saveCourse(
+                marathon,
+                capacity = 10,
+                currentCount = 0
+            )
 
-        registrationService.create(participant.id, createRegistrationRequest(course.id))
+        registrationService.create(
+            participant.id,
+            createRegistrationRequest(course.id)
+        )
 
-        assertThat(registrationRepository.count()).isEqualTo(1)
-        assertThat(findCourse(course.id).currentCount).isEqualTo(1)
+        assertThat(registrationRepository.count())
+            .isEqualTo(1)
+        assertThat(findCourse(course.id).currentCount)
+            .isEqualTo(1)
     }
 
     @Test
@@ -124,13 +153,28 @@ class RegistrationCommandServiceIntegrationTest {
         val organizer = saveOrganizer("organizer-cancel@test.com")
         val participant = saveParticipant("participant-cancel@test.com")
         val marathon = saveMarathon(organizer, "서울 마라톤")
-        val course = saveCourse(marathon, capacity = 10, currentCount = 1)
-        val registration = saveRegistration(participant, course, marathon)
+        val course =
+            saveCourse(
+                marathon,
+                capacity = 10,
+                currentCount = 1
+            )
+        val registration =
+            saveRegistration(
+                participant,
+                course,
+                marathon
+            )
 
-        registrationService.cancel(participant.id, registration.id)
+        registrationService.cancel(
+            participant.id,
+            registration.id
+        )
 
-        assertThat(registrationRepository.count()).isZero()
-        assertThat(findCourse(course.id).currentCount).isZero()
+        assertThat(registrationRepository.count())
+            .isZero()
+        assertThat(findCourse(course.id).currentCount)
+            .isZero()
     }
 
     @Test
@@ -139,18 +183,31 @@ class RegistrationCommandServiceIntegrationTest {
         val organizer = saveOrganizer("organizer-duplicate@test.com")
         val participant = saveParticipant("participant-duplicate@test.com")
         val marathon = saveMarathon(organizer, "서울 마라톤")
-        val course = saveCourse(marathon, capacity = 10, currentCount = 0)
+        val course =
+            saveCourse(
+                marathon,
+                capacity = 10,
+                currentCount = 0
+            )
         val request = createRegistrationRequest(course.id)
 
         registrationService.create(participant.id, request)
 
-        val exception = assertThrows<DataIntegrityViolationException> {
-            registrationService.create(participant.id, request)
-        }
+        val exception =
+            assertThrows<DataIntegrityViolationException> {
+                registrationService.create(participant.id, request)
+            }
 
-        assertThat(registrationRepository.count()).isEqualTo(1)
-        assertThat(findCourse(course.id).currentCount).isEqualTo(1)
-        assertThat(containsConstraintName(exception, "uk_registration_user_marathon")).isTrue()
+        assertThat(registrationRepository.count())
+            .isEqualTo(1)
+        assertThat(findCourse(course.id).currentCount)
+            .isEqualTo(1)
+        assertThat(
+            containsConstraintName(
+                exception,
+                "uk_registration_user_marathon"
+            )
+        ).isTrue()
     }
 
     private fun saveOrganizer(email: String): Users =
@@ -174,7 +231,14 @@ class RegistrationCommandServiceIntegrationTest {
         ).let(userRepository::save)
 
     private fun saveCourseWithMarathon(organizer: Users): Course =
-        saveCourse(saveMarathon(organizer, "서울 마라톤"), capacity = 100, currentCount = 0)
+        saveCourse(
+            saveMarathon(
+                organizer,
+                "서울 마라톤"
+            ),
+            capacity = 100,
+            currentCount = 0
+        )
 
     private fun createRegistrationRequest(courseId: Long): CreateRegistrationReq =
         CreateRegistrationReq(
@@ -186,7 +250,10 @@ class RegistrationCommandServiceIntegrationTest {
             agreedTerms = true
         )
 
-    private fun saveMarathon(organizer: Users, title: String): Marathon =
+    private fun saveMarathon(
+        organizer: Users,
+        title: String
+    ): Marathon =
         Marathon.create(
             organizer = organizer,
             title = title,
@@ -198,21 +265,32 @@ class RegistrationCommandServiceIntegrationTest {
             registrationEndAt = LocalDateTime.now().plusDays(5)
         ).let(marathonRepository::saveAndFlush)
 
-    private fun saveCourse(marathon: Marathon, capacity: Int, currentCount: Int): Course {
-        val course = Course.create(
-            courseType = "10K",
-            price = BigDecimal.ZERO,
-            capacity = capacity,
-            currentCount = currentCount
-        )
+    private fun saveCourse(
+        marathon: Marathon,
+        capacity: Int,
+        currentCount: Int
+    ): Course {
+        val course =
+            Course.create(
+                courseType = "10K",
+                price = BigDecimal.ZERO,
+                capacity = capacity,
+                currentCount = currentCount
+            )
 
         marathon.addCourse(course)
         marathonRepository.saveAndFlush(marathon)
 
-        return courseRepository.findAllByMarathon_IdOrderByIdAsc(marathon.id).first()
+        return courseRepository
+            .findAllByMarathon_IdOrderByIdAsc(marathon.id)
+            .first()
     }
 
-    private fun saveRegistration(user: Users, course: Course, marathon: Marathon): Registration =
+    private fun saveRegistration(
+        user: Users,
+        course: Course,
+        marathon: Marathon
+    ): Registration =
         Registration.createCompleted(
             user = user,
             course = course,
@@ -228,12 +306,10 @@ class RegistrationCommandServiceIntegrationTest {
         courseRepository.findByIdOrNull(courseId)
             ?: error("Course not found: $courseId")
 
-    private fun containsConstraintName(throwable: Throwable?, constraintName: String): Boolean =
+    private fun containsConstraintName(
+        throwable: Throwable?,
+        constraintName: String
+    ): Boolean =
         generateSequence(throwable) { it.cause }
             .any { it.message?.contains(constraintName) == true }
-
-    private fun anyEmailMessage(): EmailMessage {
-        any(EmailMessage::class.java)
-        return EmailMessage("", "", "")
-    }
 }
