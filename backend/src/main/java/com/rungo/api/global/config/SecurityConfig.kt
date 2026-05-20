@@ -4,6 +4,7 @@ import com.rungo.api.domain.auth.handler.OAuth2AuthenticationFailureHandler
 import com.rungo.api.domain.auth.handler.OAuth2AuthenticationSuccessHandler
 import com.rungo.api.domain.auth.service.CustomOAuth2UserService
 import com.rungo.api.global.security.CustomAuthenticationFilter
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -22,6 +23,9 @@ class SecurityConfig(
     private val customOAuth2UserService: CustomOAuth2UserService,
     private val oAuth2AuthenticationSuccessHandler: OAuth2AuthenticationSuccessHandler,
     private val oAuth2AuthenticationFailureHandler: OAuth2AuthenticationFailureHandler,
+
+    @param:Value("\${app.frontend.url:http://localhost:3000}")
+    private val frontendUrl: String,
 ) {
 
     @Bean
@@ -31,7 +35,10 @@ class SecurityConfig(
             registerCorsConfiguration(
                 "/**",
                 CorsConfiguration().apply {
-                    allowedOrigins = listOf("http://localhost:3000")
+                    allowedOrigins = listOf(
+                        "http://localhost:3000",
+                        frontendUrl,
+                    ).distinct()
                     allowedMethods = listOf(
                         "GET",
                         "POST",
