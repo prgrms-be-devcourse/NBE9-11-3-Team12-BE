@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
 @Schema(description = "내 정보 조회 응답 DTO")
-@JvmRecord
 data class MyProfileRes(
     @field:Schema(description = "사용자 ID", example = "1")
     val id: Long,
