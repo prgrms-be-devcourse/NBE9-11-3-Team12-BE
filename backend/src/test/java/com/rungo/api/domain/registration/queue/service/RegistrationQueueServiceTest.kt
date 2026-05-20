@@ -74,6 +74,7 @@ class RegistrationQueueServiceTest {
             properties = properties,
             objectMapper = objectMapper()
         )
+        clearRegistrationQueueKeys()
         registrationQueueService = RegistrationQueueService(
             registrationQueueRepository = registrationQueueRepository,
             registrationService = registrationService,
@@ -83,8 +84,12 @@ class RegistrationQueueServiceTest {
 
     @AfterEach
     fun tearDown() {
-        redissonClient.keys.deleteByPattern("queue:registration:*")
+        clearRegistrationQueueKeys()
         redissonClient.shutdown()
+    }
+
+    private fun clearRegistrationQueueKeys() {
+        redissonClient.keys.deleteByPattern("queue:registration:*")
     }
 
     @Test
