@@ -1,5 +1,6 @@
 package com.rungo.api.domain.registration.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.rungo.api.domain.marathon.course.entity.Course
 import com.rungo.api.domain.marathon.marathon.dto.PageRes
 import com.rungo.api.domain.marathon.marathon.entity.Marathon
@@ -136,6 +137,7 @@ data class MyRegistrationRes(
         @field:Schema(description = "접수 상세주소", example = "101동 202호")
         val snapDetail: String?,
 
+        @field:JsonProperty("tSize")
         @field:Schema(description = "티셔츠 사이즈", example = "L")
         val tSize: String,
 

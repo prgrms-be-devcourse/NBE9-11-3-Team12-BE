@@ -1,5 +1,6 @@
 package com.rungo.api.domain.registration.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.rungo.api.domain.marathon.marathon.dto.PageRes
 import com.rungo.api.domain.registration.entity.Registration
 import com.rungo.api.domain.registration.enumtype.RegistrationStatus
@@ -33,6 +34,7 @@ data class RegistrationParticipantListRes(
         @field:Schema(description = "참가자 전화번호", example = "010-1234-5678")
         val phoneNumber: String,
 
+        @field:JsonProperty("tSize")
         @field:Schema(description = "티셔츠 사이즈", example = "L")
         val tSize: String,
 

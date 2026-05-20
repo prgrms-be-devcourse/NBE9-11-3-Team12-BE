@@ -1,5 +1,6 @@
 package com.rungo.api.domain.registration.dto
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.rungo.api.domain.registration.entity.Registration
 import com.rungo.api.domain.registration.enumtype.RegistrationStatus
 import io.swagger.v3.oas.annotations.media.Schema
@@ -40,6 +41,7 @@ data class RegistrationParticipantDetailRes(
     @field:Schema(description = "접수 상세 주소", example = "8층")
     val snapDetail: String?,
 
+    @field:JsonProperty("tSize")
     @field:Schema(description = "티셔츠 사이즈", example = "L")
     val tSize: String,
 
