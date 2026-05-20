@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
 @Schema(description = "참가자 상세 조회 응답 DTO")
-@JvmRecord
 data class RegistrationParticipantDetailRes(
     @field:Schema(description = "접수 ID", example = "10")
     val registrationId: Long,
@@ -51,7 +50,6 @@ data class RegistrationParticipantDetailRes(
     val appliedAt: LocalDateTime,
 ) {
     companion object {
-        @JvmStatic
         fun from(registration: Registration) = RegistrationParticipantDetailRes(
             registrationId = registration.id,
             marathonId = registration.marathon.id,

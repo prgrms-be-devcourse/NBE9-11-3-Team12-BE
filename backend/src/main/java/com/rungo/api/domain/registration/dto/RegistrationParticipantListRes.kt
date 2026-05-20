@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page
 import java.time.LocalDateTime
 
 @Schema(description = "참가자 목록 조회 응답 DTO")
-@JvmRecord
 data class RegistrationParticipantListRes(
     @field:Schema(description = "참가자 목록")
     val content: List<Item>,
@@ -17,7 +16,6 @@ data class RegistrationParticipantListRes(
     val pageRes: PageRes,
 ) {
     companion object {
-        @JvmStatic
         fun from(page: Page<Registration>) = RegistrationParticipantListRes(
             content = page.content.map(Item::from),
             pageRes = PageRes.from(page),
@@ -25,8 +23,7 @@ data class RegistrationParticipantListRes(
     }
 
     @Schema(description = "참가자 목록 항목 DTO")
-    @JvmRecord
-    data class Item(
+        data class Item(
         @field:Schema(description = "접수 ID", example = "10")
         val registrationId: Long,
 
@@ -52,8 +49,7 @@ data class RegistrationParticipantListRes(
         val appliedAt: LocalDateTime,
     ) {
         companion object {
-            @JvmStatic
-            fun from(registration: Registration) = Item (
+                fun from(registration: Registration) = Item (
                 registrationId = registration.id,
                 name = registration.snapName,
                 phoneNumber = registration.snapPhoneNumber,

@@ -83,8 +83,6 @@ class RegistrationCancelHistory protected constructor() {
         protected set
 
     companion object {
-        @JvmStatic
-        @JvmOverloads
         fun create(
             registration: Registration,
             cancelReason: RegistrationCancelReason = RegistrationCancelReason.USER_CANCELED

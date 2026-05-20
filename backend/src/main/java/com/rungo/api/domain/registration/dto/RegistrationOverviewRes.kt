@@ -7,7 +7,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 @Schema(description = "주최자용 접수 요약 조회 응답 DTO")
-@JvmRecord
 data class RegistrationOverviewRes(
     @field:Schema(description = "마라톤 요약 정보")
     val marathon: MarathonInfo,
@@ -16,7 +15,6 @@ data class RegistrationOverviewRes(
     val courseStatuses: List<CourseStatus>,
 ) {
     companion object {
-        @JvmStatic
         fun of(marathon: Marathon, courses: List<Course>): RegistrationOverviewRes {
             val courseStatuses = courses.map(CourseStatus::from)
             val totalCurrentCount = courses.sumOf { it.currentCount }
@@ -39,8 +37,7 @@ data class RegistrationOverviewRes(
     }
 
     @Schema(description = "마라톤 요약 정보 DTO")
-    @JvmRecord
-    data class MarathonInfo(
+        data class MarathonInfo(
         @field:Schema(description = "마라톤 ID", example = "1")
         val marathonId: Long,
 
@@ -66,8 +63,7 @@ data class RegistrationOverviewRes(
         val totalRecruitmentRate: Int,
     ) {
         companion object {
-            @JvmStatic
-            fun of(
+                fun of(
                 marathon: Marathon,
                 totalCurrentCount: Int,
                 totalCapacity: Int,
@@ -89,8 +85,7 @@ data class RegistrationOverviewRes(
     }
 
     @Schema(description = "코스별 접수 현황 DTO")
-    @JvmRecord
-    data class CourseStatus(
+        data class CourseStatus(
         @field:Schema(description = "코스 ID", example = "2")
         val courseId: Long,
 
@@ -113,8 +108,7 @@ data class RegistrationOverviewRes(
         val recruitmentRate: Int,
     ) {
         companion object {
-            @JvmStatic
-            fun from(course: Course): CourseStatus {
+                fun from(course: Course): CourseStatus {
                 val currentCount = course.currentCount
                 val capacity = course.capacity
                 val remainingCount = (capacity - currentCount).coerceAtLeast(0)
