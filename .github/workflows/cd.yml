@@ -1,0 +1,42 @@
+name: CD
+
+# 언제 실행할지 설정
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    # GitHub Actions 실행 환경
+    runs-on: ubuntu-latest
+
+    # GHCR push 권한
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # 레포 코드 가져오기
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # GitHub Container Registry 로그인
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Docker 이미지 빌드
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ghcr.io/prgrms-be-devcourse/rungo-backend:latest \
+            ./backend
+
+      # GHCR에 Docker 이미지 업로드
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/prgrms-be-devcourse/rungo-backend:latest
