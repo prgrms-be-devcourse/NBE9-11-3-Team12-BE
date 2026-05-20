@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 @Schema(description = "내 정보 수정 요청 DTO")
-@JvmRecord
 data class UpdateMyProfileReq(
 
     @field:Schema(description = "사용자 이름", example = "홍길동")

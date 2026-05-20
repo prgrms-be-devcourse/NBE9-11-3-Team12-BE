@@ -22,7 +22,6 @@ data class MeRes(
     val profileCompleted: Boolean
 ) {
     companion object {
-        @JvmStatic
         fun from(user: Users): MeRes = MeRes(
             id = user.id,
             email = user.email,
