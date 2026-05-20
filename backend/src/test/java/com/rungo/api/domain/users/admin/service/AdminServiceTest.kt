@@ -217,7 +217,7 @@ class AdminServiceTest {
     }
 
     @Test
-    @DisplayName("주최자 권한 신청 거절 실패 - 이미 처리된 신청이면 INVALID_INPUT_VALUE 예외가 발생한다")
+    @DisplayName("주최자 권한 신청 거절 실패 - 이미 처리된 신청이면 ALREADY_PROCESSED_APPLICATION 예외가 발생한다")
     fun rejectOrganizerApplicationFailAlreadyProcessed() {
         val admin = createUser(1L, "관리자", Role.ADMIN)
         val applicant = createUser(2L, "참가자", Role.PARTICIPANT)
@@ -242,7 +242,7 @@ class AdminServiceTest {
             )
         }
 
-        assertEquals(ErrorCode.INVALID_INPUT_VALUE, exception.errorCode)
+        assertEquals(ErrorCode.ALREADY_PROCESSED_APPLICATION, exception.errorCode)
     }
 
     private fun createApplication(
