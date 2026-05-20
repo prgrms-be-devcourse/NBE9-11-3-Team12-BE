@@ -18,20 +18,16 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
-import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.data.domain.Sort
+import org.springframework.test.util.ReflectionTestUtils
 import java.time.LocalDate
-import java.util.Optional
 import java.time.LocalDateTime
 import java.util.Optional
-
-
 
 @ExtendWith(MockitoExtension::class)
 class AdminServiceTest {
@@ -51,9 +47,6 @@ class AdminServiceTest {
             organizerApplicationRepository = organizerApplicationRepository,
         )
     }
-
-    @Mock
-    private lateinit var organizerApplicationRepository: OrganizerApplicationRepository
 
     @Test
     @DisplayName("주최자 권한 부여 성공 - 관리자가 참가자 유저를 ORGANIZER로 승급시킨다")
@@ -257,52 +250,25 @@ class AdminServiceTest {
         assertEquals(ErrorCode.ALREADY_PROCESSED_APPLICATION, exception.errorCode)
     }
 
-    private fun createApplication(
-        id: Long,
-        user: Users,
-        status: ApplicationStatus,
-    ): OrganizerApplication {
-        val application = OrganizerApplication.create(
-            user = user,
-            businessRegistrationNumber = "123-45-67890",
-        )
-
-        ReflectionTestUtils.setField(application, "id", id)
-        ReflectionTestUtils.setField(application, "status", status)
-
-        return application
-    }
-
-    private fun createUser(
-        id: Long,
-        name: String,
-        role: Role,
-    ): Users {
     @Test
     @DisplayName("주최자 권한 신청 목록 조회 성공 - status가 있으면 해당 상태 신청 목록을 조회한다")
     fun getOrganizerApplicationsSuccessWithStatus() {
         val admin = createUser(1L, "관리자", Role.ADMIN)
         val applicant = createUser(2L, "참가자", Role.PARTICIPANT)
+        val requestedAt = LocalDateTime.of(2026, 5, 20, 12, 0)
 
         val application = createApplication(
             id = 10L,
             user = applicant,
             status = ApplicationStatus.PENDING,
-            requestedAt = LocalDateTime.of(2026, 5, 20, 12, 0),
+            requestedAt = requestedAt,
         )
 
         val pageable = PageRequest.of(0, 20)
         val sortedPageable = sortedPageable()
+        val page = PageImpl(listOf(application), sortedPageable, 1)
 
-        val page = PageImpl(
-            listOf(application),
-            sortedPageable,
-            1,
-        )
-
-        given(userRepository.findById(1L))
-            .willReturn(Optional.of(admin))
-
+        given(userRepository.findById(1L)).willReturn(Optional.of(admin))
         given(
             organizerApplicationRepository.findAllByStatus(
                 ApplicationStatus.PENDING,
@@ -323,8 +289,7 @@ class AdminServiceTest {
         assertEquals("참가자@test.com", result.content[0].userEmail)
         assertEquals("123-45-67890", result.content[0].businessRegistrationNumber)
         assertEquals(ApplicationStatus.PENDING, result.content[0].status)
-        assertEquals(LocalDateTime.of(2026, 5, 20, 12, 0), result.content[0].requestedAt)
-
+        assertEquals(requestedAt, result.content[0].requestedAt)
         assertEquals(0, result.page.page)
         assertEquals(20, result.page.size)
         assertEquals(1L, result.page.totalElements)
@@ -370,35 +335,28 @@ class AdminServiceTest {
         val pageable = PageRequest.of(0, 20)
         val sortedPageable = sortedPageable()
 
-        given(userRepository.findById(1L))
-            .willReturn(Optional.of(admin))
+        given(userRepository.findById(1L)).willReturn(Optional.of(admin))
 
         given(
             organizerApplicationRepository.findAllByStatus(
                 ApplicationStatus.PENDING,
                 sortedPageable,
             )
-        ).willReturn(
-            PageImpl(listOf(pendingApplication), sortedPageable, 1)
-        )
+        ).willReturn(PageImpl(listOf(pendingApplication), sortedPageable, 1))
 
         given(
             organizerApplicationRepository.findAllByStatus(
                 ApplicationStatus.APPROVED,
                 sortedPageable,
             )
-        ).willReturn(
-            PageImpl(listOf(approvedApplication), sortedPageable, 1)
-        )
+        ).willReturn(PageImpl(listOf(approvedApplication), sortedPageable, 1))
 
         given(
             organizerApplicationRepository.findAllByStatus(
                 ApplicationStatus.REJECTED,
                 sortedPageable,
             )
-        ).willReturn(
-            PageImpl(listOf(rejectedApplication), sortedPageable, 1)
-        )
+        ).willReturn(PageImpl(listOf(rejectedApplication), sortedPageable, 1))
 
         val pendingResult = adminService.getOrganizerApplications(
             adminId = 1L,
@@ -434,18 +392,9 @@ class AdminServiceTest {
         assertEquals("거절참가자", rejectedResult.content[0].userName)
 
         verify(userRepository, times(3)).findById(1L)
-        verify(organizerApplicationRepository).findAllByStatus(
-            ApplicationStatus.PENDING,
-            sortedPageable,
-        )
-        verify(organizerApplicationRepository).findAllByStatus(
-            ApplicationStatus.APPROVED,
-            sortedPageable,
-        )
-        verify(organizerApplicationRepository).findAllByStatus(
-            ApplicationStatus.REJECTED,
-            sortedPageable,
-        )
+        verify(organizerApplicationRepository).findAllByStatus(ApplicationStatus.PENDING, sortedPageable)
+        verify(organizerApplicationRepository).findAllByStatus(ApplicationStatus.APPROVED, sortedPageable)
+        verify(organizerApplicationRepository).findAllByStatus(ApplicationStatus.REJECTED, sortedPageable)
     }
 
     @Test
@@ -481,17 +430,11 @@ class AdminServiceTest {
         val pageable = PageRequest.of(0, 20)
         val sortedPageable = sortedPageable()
 
-        given(userRepository.findById(1L))
-            .willReturn(Optional.of(admin))
-
+        given(userRepository.findById(1L)).willReturn(Optional.of(admin))
         given(organizerApplicationRepository.findAll(sortedPageable))
             .willReturn(
                 PageImpl(
-                    listOf(
-                        pendingApplication,
-                        approvedApplication,
-                        rejectedApplication,
-                    ),
+                    listOf(pendingApplication, approvedApplication, rejectedApplication),
                     sortedPageable,
                     3,
                 )
@@ -504,7 +447,6 @@ class AdminServiceTest {
         )
 
         assertEquals(3, result.content.size)
-
         assertEquals(10L, result.content[0].applicationId)
         assertEquals(ApplicationStatus.PENDING, result.content[0].status)
         assertEquals("대기참가자", result.content[0].userName)
@@ -525,8 +467,6 @@ class AdminServiceTest {
         verify(userRepository).findById(1L)
         verify(organizerApplicationRepository).findAll(sortedPageable)
     }
-
-
 
     @Test
     @DisplayName("주최자 권한 신청 목록 조회 실패 - 관리자가 존재하지 않으면 USER_NOT_FOUND 예외가 발생한다")
@@ -565,7 +505,11 @@ class AdminServiceTest {
         assertEquals(ErrorCode.FORBIDDEN, exception.errorCode)
     }
 
-    private fun createUser(id: Long, name: String, role: Role): Users {
+    private fun createUser(
+        id: Long,
+        name: String,
+        role: Role,
+    ): Users {
         val user = Users.create(
             "$name@test.com",
             name,
@@ -584,7 +528,6 @@ class AdminServiceTest {
         id: Long,
         user: Users,
         status: ApplicationStatus,
-        requestedAt: LocalDateTime,
     ): OrganizerApplication {
         val application = OrganizerApplication.create(
             user = user,
@@ -593,6 +536,22 @@ class AdminServiceTest {
 
         ReflectionTestUtils.setField(application, "id", id)
         ReflectionTestUtils.setField(application, "status", status)
+
+        return application
+    }
+
+    private fun createApplication(
+        id: Long,
+        user: Users,
+        status: ApplicationStatus,
+        requestedAt: LocalDateTime,
+    ): OrganizerApplication {
+        val application = createApplication(
+            id = id,
+            user = user,
+            status = status,
+        )
+
         ReflectionTestUtils.setField(application, "requestedAt", requestedAt)
 
         return application
@@ -607,5 +566,4 @@ class AdminServiceTest {
                 Sort.Order.desc("id"),
             )
         )
-
 }

@@ -2,12 +2,14 @@ package com.rungo.api.domain.users.admin.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.rungo.api.domain.marathon.marathon.service.MarathonCleanupService
-import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationReq
-import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationRes
+import com.rungo.api.domain.users.admin.dto.AdminApproveRes
 import com.rungo.api.domain.users.admin.dto.AdminOrganizerApplicationListRes
 import com.rungo.api.domain.users.admin.dto.AdminOrganizerApplicationListRes.Item
 import com.rungo.api.domain.users.admin.dto.AdminOrganizerApplicationListRes.PageInfo
+import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationReq
+import com.rungo.api.domain.users.admin.dto.RejectOrganizerApplicationRes
 import com.rungo.api.domain.users.admin.service.AdminService
+import com.rungo.api.domain.users.enumtype.Gender
 import com.rungo.api.domain.users.enumtype.Role
 import com.rungo.api.domain.users.organizerApplication.status.ApplicationStatus
 import com.rungo.api.global.security.SecurityUser
@@ -15,13 +17,13 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.MediaType
 import org.springframework.data.domain.PageRequest
+import org.springframework.http.MediaType
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -31,6 +33,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @AutoConfigureMockMvc(addFilters = false)
@@ -49,7 +52,6 @@ class AdminControllerTest {
     @MockitoBean
     private lateinit var marathonCleanupService: MarathonCleanupService
 
-
     @AfterEach
     fun tearDown() {
         SecurityContextHolder.clearContext()
@@ -60,11 +62,26 @@ class AdminControllerTest {
     fun approve_organizer_success() {
         setAuthenticatedAdmin(1L)
 
+        val response = AdminApproveRes(
+            id = 2L,
+            email = "user@test.com",
+            name = "참가자",
+            phoneNumber = "010-1111-2222",
+            gender = Gender.MALE,
+            birth = LocalDate.of(2000, 1, 1),
+            role = Role.ORGANIZER,
+        )
+
+        given(adminService.approveOrganizer(1L, 2L))
+            .willReturn(response)
+
         mockMvc.perform(patch("/api/v1/admin/{userId}/organizer", 2L))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.status").value(200))
             .andExpect(jsonPath("$.code").value("SUCCESS"))
             .andExpect(jsonPath("$.message").value("요청에 성공했습니다."))
+            .andExpect(jsonPath("$.data.id").value(2))
+            .andExpect(jsonPath("$.data.role").value("ORGANIZER"))
 
         verify(adminService).approveOrganizer(1L, 2L)
     }
@@ -120,7 +137,11 @@ class AdminControllerTest {
         )
             .andExpect(status().isBadRequest)
 
-        verifyNoInteractions(adminService)
+        verify(adminService, never()).rejectOrganizerApplication(
+            adminId = 1L,
+            applicationId = 10L,
+            req = req,
+        )
     }
 
     @Test
