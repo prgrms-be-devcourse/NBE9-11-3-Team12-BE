@@ -60,7 +60,6 @@ data class ReadMyMarathonRes(
     )
 
     companion object {
-        @JvmStatic
         fun from(marathon: Marathon) = ReadMyMarathonRes(
             id = marathon.id,
             title = marathon.title,

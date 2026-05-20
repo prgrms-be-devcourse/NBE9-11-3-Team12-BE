@@ -48,7 +48,6 @@ data class MarathonDetailRes(
     val createdAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(marathon: Marathon) = MarathonDetailRes(
             id = marathon.id,
             title = marathon.title,

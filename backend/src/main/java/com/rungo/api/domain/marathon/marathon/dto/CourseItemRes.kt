@@ -31,8 +31,6 @@ data class CourseItemRes(
 ) {
 
     companion object {
-
-        @JvmStatic
         fun from(course: Course) = CourseItemRes(
             id = course.id,
             courseType = course.courseType,
