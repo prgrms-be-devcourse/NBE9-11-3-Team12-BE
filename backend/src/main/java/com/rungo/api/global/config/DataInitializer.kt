@@ -232,7 +232,7 @@ class DataInitializer(
         val courses = savedMarathons.map { marathon ->
             Course.create(
                 courseType = "10K",
-                price = BigDecimal.valueOf(30000),
+                price = BigDecimal.valueOf(100),
                 capacity = 40000,
                 currentCount = 1,
             ).also { course ->

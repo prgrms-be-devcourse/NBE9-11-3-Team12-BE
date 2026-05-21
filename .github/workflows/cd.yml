@@ -89,11 +89,66 @@ jobs:
             ${{ secrets.ENV_FILE }}
             EOF
 
+            # .env 값을 현재 shell에서도 사용할 수 있도록 로드
+            set -a
+            . ./.env
+            set +a
+            
             # 업로드 파일 저장 디렉토리 생성
             mkdir -p uploads
 
+            # 백업 디렉토리 생성
+            mkdir -p ~/app/backups/mysql
+            mkdir -p ~/app/backups/redis    
+
+            # MySQL 자동 백업
+            # 배포 전 현재 운영 DB를 SQL 파일로 백업
+            echo "==== MySQL backup ===="
+            if docker ps --format '{{.Names}}' | grep -q '^rungo-mysql$'; then
+              docker exec rungo-mysql mysqldump \
+                -uroot \
+                -p"${MYSQL_ROOT_PASSWORD}" \
+                --single-transaction \
+                --routines \
+                --triggers \
+                rungo \
+                > ~/app/backups/mysql/rungo_mysql_$(date +%Y%m%d_%H%M%S).sql
+
+              # 7일 지난 MySQL 백업 삭제
+              find ~/app/backups/mysql -name "rungo_mysql_*.sql" -type f -mtime +7 -delete
+
+              echo "MySQL backup created."
+              ls -lh ~/app/backups/mysql | tail -5
+            else
+              echo "rungo-mysql container is not running. Skip MySQL backup."
+            fi
+
+            # Redis 자동 백업
+            # 배포 전 현재 Redis 데이터를 RDB 파일로 백업
+            echo "==== Redis backup ===="
+            if docker ps --format '{{.Names}}' | grep -q '^rungo-redis$'; then
+              docker exec rungo-redis redis-cli \
+                -a "${REDIS_PASSWORD}" \
+                --no-auth-warning \
+                SAVE
+
+              docker cp rungo-redis:/data/dump.rdb \
+                ~/app/backups/redis/rungo_redis_$(date +%Y%m%d_%H%M%S).rdb
+
+              # 7일 지난 Redis 백업 삭제
+              find ~/app/backups/redis -name "rungo_redis_*.rdb" -type f -mtime +7 -delete
+
+              echo "Redis backup created."
+              ls -lh ~/app/backups/redis | tail -5
+            else
+              echo "rungo-redis container is not running. Skip Redis backup."
+            fi                 
+            
             # GHCR private image pull을 위한 로그인
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+            
+            # docker compose 설정 검증
+            docker compose -f docker-compose.prod.yml config
 
             # 최신 이미지 pull 및 컨테이너 실행
             docker compose -f docker-compose.prod.yml pull
@@ -101,3 +156,20 @@ jobs:
 
             # 사용하지 않는 이미지 정리
             docker image prune -f
+            
+            # 배포 후 health check
+            echo "==== Health check ===="
+            for i in {1..12}; do
+              if curl -fsS https://api.rungoapp.net/actuator/health | grep -q '"status":"UP"'; then
+                echo "Health check passed."
+                exit 0
+              fi
+
+              echo "Waiting for application health... attempt=$i"
+              sleep 10
+            done
+
+            echo "Health check failed."
+            docker compose -f docker-compose.prod.yml ps
+            docker logs rungo-app --tail=100
+            exit 1
