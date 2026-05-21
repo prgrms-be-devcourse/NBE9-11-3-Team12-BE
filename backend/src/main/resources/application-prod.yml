@@ -23,6 +23,8 @@ spring:
       hibernate:
         format_sql: false
         default_batch_fetch_size: 1000
+        jdbc:
+          time_zone: Asia/Seoul
 
   mail:
     host: smtp.gmail.com
