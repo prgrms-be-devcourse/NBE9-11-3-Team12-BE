@@ -154,12 +154,15 @@ jobs:
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
 
+            # app 컨테이너 재생성 후 nginx가 새 app 컨테이너를 바라보도록 재시작
+            docker compose -f docker-compose.prod.yml restart nginx
+
             # 사용하지 않는 이미지 정리
             docker image prune -f
             
             # 배포 후 health check
             echo "==== Health check ===="
-            for i in {1..12}; do
+            for i in {1..24}; do
               if curl -fsS https://api.rungoapp.net/actuator/health | grep -q '"status":"UP"'; then
                 echo "Health check passed."
                 exit 0
@@ -171,5 +174,6 @@ jobs:
 
             echo "Health check failed."
             docker compose -f docker-compose.prod.yml ps
-            docker logs rungo-app --tail=100
+            docker logs rungo-app --tail=150
+            docker logs rungo-nginx --tail=100
             exit 1
