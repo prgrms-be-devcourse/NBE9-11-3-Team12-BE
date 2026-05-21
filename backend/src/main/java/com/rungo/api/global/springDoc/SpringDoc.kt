@@ -68,14 +68,26 @@ class SpringDoc {
     )
 
     @Bean
+    fun paymentApi(): GroupedOpenApi = groupedOpenApi(
+        group = "05. Payment",
+        path = "/api/v1/payments/**",
+    )
+
+    @Bean
     fun organizerApi(): GroupedOpenApi = groupedOpenApi(
-        group = "05. Organizer",
+        group = "06. Organizer",
         path = "/api/v1/organizer/**",
     )
 
     @Bean
+    fun organizerApplicationApi(): GroupedOpenApi = groupedOpenApi(
+        group = "07. Organizer Application",
+        path = "/api/v1/organizer-applications/**",
+    )
+
+    @Bean
     fun adminApi(): GroupedOpenApi = groupedOpenApi(
-        group = "06. Admin",
+        group = "08. Admin",
         path = "/api/v1/admin/**",
     )
 
