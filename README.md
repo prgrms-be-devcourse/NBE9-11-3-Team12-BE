@@ -51,34 +51,34 @@
 ## 📄 API 명세서
 
 - **Auth**
-<img width="849" height="229" alt="image" src="https://github.com/user-attachments/assets/fe6f1ab6-3538-4de2-974c-f85e28e5dafa" />
+<img width="963" height="229" alt="Image" src="https://github.com/user-attachments/assets/1595db85-36bb-4421-a696-c398022923aa" />
 <br>
 
 - **Users**
-<img width="847" height="156" alt="image" src="https://github.com/user-attachments/assets/b52643a7-3a00-4e75-90f5-a886bf35251b" />
+<img width="965" height="157" alt="Image" src="https://github.com/user-attachments/assets/30f7f81d-1058-47dc-8bbf-67d3d305dca9" />
 <br>
 
 - **Marathon**
-<img width="847" height="262" alt="image" src="https://github.com/user-attachments/assets/5e9fe927-dd2c-493b-bf5f-45f2cf84c6e7" />
+<img width="966" height="265" alt="Image" src="https://github.com/user-attachments/assets/cb70d673-3dbe-4f25-b065-55d9b302aacd" />
 <br>
 
 - **Registration**
-<img width="848" height="151" alt="image" src="https://github.com/user-attachments/assets/6268d540-34c1-4d7c-9227-9a704d3df912" />
+<img width="959" height="153" alt="Image" src="https://github.com/user-attachments/assets/324a93bb-95b0-4c42-b512-673b2b121763" />
 <br>
 
 - **Payment**
-<img width="847" height="74" alt="image" src="https://github.com/user-attachments/assets/bd1e312a-8122-4891-8dce-561562fcc89b" />
+<img width="961" height="80" alt="Image" src="https://github.com/user-attachments/assets/b4d2c6db-446c-4a23-a561-bea30db089e8" />
 <br>
 
 - **Organizer**
-<img width="850" height="151" alt="image" src="https://github.com/user-attachments/assets/735538c5-50b9-458a-8dac-97c43bb4c12d" />
+<img width="965" height="155" alt="Image" src="https://github.com/user-attachments/assets/935e181b-74db-419d-bd74-ba97c30070bf" />
 <br>
 
-<img width="850" height="75" alt="image" src="https://github.com/user-attachments/assets/b3118cd1-a040-44d9-a8df-5353c98ba37b" />
+<img width="963" height="84" alt="Image" src="https://github.com/user-attachments/assets/585f074a-f927-4892-9b8c-2e49d068b756" />
 <br>
 
 - **Admin**
-<img width="848" height="188" alt="image" src="https://github.com/user-attachments/assets/38b20aac-3172-40e4-9dfe-c8b7a1aa307d" />
+<img width="972" height="198" alt="Image" src="https://github.com/user-attachments/assets/e28d5834-91e7-4e45-b2ba-494168072f47" />
 <br>
 
 ## 💡 기술 스택
@@ -101,7 +101,7 @@ Frontend | Backend | Security | Database | Deployment | Monitoring | Collaborati
 ## 🗂️ 데이터베이스
 
 <!-- ERD 이미지를 여기에 추가해주세요 -->
-<img width="2000" height="1064" alt="image" src="https://github.com/user-attachments/assets/1f63977c-6f69-4a76-97ca-114e139c6a00" />
+<img width="2247" height="1223" alt="Image" src="https://github.com/user-attachments/assets/53de66b1-1528-4435-91b6-1ddcd54a4d6d" />
 
 <br>
 
@@ -109,7 +109,7 @@ Frontend | Backend | Security | Database | Deployment | Monitoring | Collaborati
 
 <!-- ### System -->
 
-<img width="1440" height="810" alt="image" src="https://github.com/user-attachments/assets/e1a728e9-3f54-4d43-a8bf-c7a3580a2b1b" />
+<img width="672" height="445" alt="Image" src="https://github.com/user-attachments/assets/5c9800ce-24af-46fc-ad4a-05d59cedc0f3" />
 
 <!-- ### Network -->
 
